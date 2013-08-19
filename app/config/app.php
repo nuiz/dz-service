@@ -26,7 +26,7 @@ return array(
 	|
 	*/
 
-	'url' => 'http://localhost',
+	'url' => 'http://localhost:8001',
 
 	/*
 	|--------------------------------------------------------------------------
@@ -112,7 +112,7 @@ return array(
 		'Illuminate\Translation\TranslationServiceProvider',
 		'Illuminate\Validation\ValidationServiceProvider',
 		'Illuminate\View\ViewServiceProvider',
-		'Illuminate\Workbench\WorkbenchServiceProvider',
+        'Illuminate\Workbench\WorkbenchServiceProvider',
 
 	),
 
@@ -169,7 +169,8 @@ return array(
 		'Redirect'        => 'Illuminate\Support\Facades\Redirect',
 		'Redis'           => 'Illuminate\Support\Facades\Redis',
 		'Request'         => 'Illuminate\Support\Facades\Request',
-		'Response'        => 'Illuminate\Support\Facades\Response',
+		//'Response'        => 'Illuminate\Support\Facades\Response',
+        'Response'        => 'Extend\Laravel\Response',
 		'Route'           => 'Illuminate\Support\Facades\Route',
 		'Schema'          => 'Illuminate\Support\Facades\Schema',
 		'Seeder'          => 'Illuminate\Database\Seeder',
