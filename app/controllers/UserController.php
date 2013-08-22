@@ -11,9 +11,9 @@ use Extend\Laravel;
 
 class UserController extends BaseController {
 
-    public function index($id = null)
+    public function index($id=null)
     {
-        return print_r($id, true);
+        return Response::json(User::find(1));
     }
 
     public function show($id){
