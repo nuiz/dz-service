@@ -16,5 +16,10 @@ Route::get('/', function()
 	return View::make('hello');
 });
 
+Route::post('/register', 'UserController@postRegister');
+
 Route::controller('users', 'UserController');
 Route::resource('user', 'UserController');
+
+Route::resource('user.setting', 'UserSettingController');
+Route::resource('user.change_password', 'UserChangePasswordController');

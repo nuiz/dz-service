@@ -12,19 +12,19 @@ namespace Extend\Laravel;
 class Response extends \Illuminate\Support\Facades\Response {
     public static function data($data)
     {
-        return parent::json([
+        return parent::json(array(
             'data'=> $data
-        ]);
+        ));
     }
 
     public static function exception($e)
     {
-        return parent::json([
-            'error'=> [
+        return parent::json(array(
+            'error'=> array(
                 'code'=> $e->getCode(),
                 'type'=> get_class($e),
                 'message'=> $e->getMessage(),
-            ]
-        ]);
+            )
+        ));
     }
 }

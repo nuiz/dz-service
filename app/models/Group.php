@@ -7,8 +7,9 @@
  * To change this template use File | Settings | File Templates.
  */
 
-class Group extends Eloquent {
+class Group extends DZEloquent {
     protected $table = 'groups';
+    protected $_dz_type = 'group';
 
     public function getUsers()
     {
