@@ -22,4 +22,11 @@ abstract class DZEloquent extends Eloquent {
         $this->id = $dz_object->id;
         return parent::save($options);
     }
+
+    public function delete()
+    {
+        $dz_object = DzObject::find($this->id);
+        $dz_object->delete();
+        return parent::delete();
+    }
 }

@@ -16,10 +16,15 @@ Route::get('/', function()
 	return View::make('hello');
 });
 
+Route::get('auth', 'AuthTokenController@index');
+Route::post('auth', 'AuthTokenController@store');
+Route::delete('auth', 'AuthTokenController@destroy');
+
 Route::post('/register', 'UserController@postRegister');
+Route::controller('/authenticate', 'AuthenticateController');
 
-Route::controller('users', 'UserController');
 Route::resource('user', 'UserController');
-
 Route::resource('user.setting', 'UserSettingController');
 Route::resource('user.change_password', 'UserChangePasswordController');
+
+Route::resource('showcase', 'ShowcaseController');

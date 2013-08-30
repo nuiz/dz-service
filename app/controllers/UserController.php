@@ -26,6 +26,15 @@ class UserController extends BaseController {
         }
     }
 
+    //admin only can store user
+    public function store(){
+    }
+
+    //admin only can update 'type' field
+    //user update 'type' response exception
+    public function update($id){
+    }
+
     public function postRegister()
     {
         try {

@@ -26,7 +26,8 @@ return array(
 	|
 	*/
 
-	'url' => 'http://localhost:8001',
+    //'url' => 'http://61.19.147.72/',
+    'url' => 'http://localhost:8001/',
 
 	/*
 	|--------------------------------------------------------------------------
@@ -114,6 +115,7 @@ return array(
 		'Illuminate\View\ViewServiceProvider',
         'Illuminate\Workbench\WorkbenchServiceProvider',
 
+        'Tappleby\AuthToken\AuthTokenServiceProvider',
 	),
 
 	/*
@@ -181,6 +183,9 @@ return array(
 		'Validator'       => 'Illuminate\Support\Facades\Validator',
 		'View'            => 'Illuminate\Support\Facades\View',
 
+        'AuthToken' => 'Tappleby\Support\Facades\AuthToken',
+        'AuthTokenController' => 'Tappleby\Support\Facades\AuthTokenController',
+        'AuthTokenNotAuthorizedException' => 'Tappleby\AuthToken\Exceptions\NotAuthorizedException',
 	),
 
 );
