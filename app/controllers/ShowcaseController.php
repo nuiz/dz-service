@@ -7,7 +7,37 @@
  * To change this template use File | Settings | File Templates.
  */
 
-class ShowcaseController extends Controller {
+class ShowcaseController extends BaseController implements ResourceInterface {
+    public function _rules()
+    {
+        return array(
+            'user.setting'=> array(
+                'get'=> array('owner', 'admin'),
+                'update'=> array('owner', 'admin'),
+            ),
+        );
+    }
+
+    public function _validate_permission($user_id, $resource, $action)
+    {
+        $rules = $this->_rules();
+
+        if(!isset($rules[$resource]))
+            return true;
+        if(!isset($rules[$resource][$action]))
+            return true;
+
+        $rule = $rules[$resource][$action];
+        if(array_search('owner', $rule)!==false){
+            if(!$this->_auth_owner($user_id))
+                throw new Exception("You not have permission for this action");
+        }
+        if(array_search('admin', $rule)!==false){
+            if(!$this->_auth_admin())
+                throw new Exception("You not have permission for this action");
+        }
+    }
+
     public function show($id){
         try {
             $showcase = Showcase::findOrFail($id);

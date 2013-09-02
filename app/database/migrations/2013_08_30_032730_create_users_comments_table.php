@@ -17,8 +17,11 @@ class CreateUsersCommentsTable extends Migration {
 			$table->increments('id');
             $table->integer('user_id');
             $table->integer('object_id');
+
             $table->text('message');
 			$table->timestamps();
+
+            $table->index(array('user_id', 'object_id'));
 		});
 	}
 

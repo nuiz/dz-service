@@ -16,6 +16,17 @@ Route::get('/', function()
 	return View::make('hello');
 });
 
+Event::listen('auth.token.valid', function($user)
+{
+    //Token is valid, set the user on auth system.
+    Auth::setUser($user);
+});
+
+App::error(function(AuthTokenNotAuthorizedException $exception) {
+    return Response::exception($exception);
+});
+
+
 Route::get('auth', 'AuthTokenController@index');
 Route::post('auth', 'AuthTokenController@store');
 Route::delete('auth', 'AuthTokenController@destroy');
@@ -28,3 +39,4 @@ Route::resource('user.setting', 'UserSettingController');
 Route::resource('user.change_password', 'UserChangePasswordController');
 
 Route::resource('showcase', 'ShowcaseController');
+Route::resource('showcase.comments', 'CommentController');

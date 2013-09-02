@@ -172,8 +172,6 @@ return array(
 		'Redis'           => 'Illuminate\Support\Facades\Redis',
 		'Request'         => 'Illuminate\Support\Facades\Request',
 		//'Response'        => 'Illuminate\Support\Facades\Response',
-        'Helper'          => 'Extend\Laravel\Helper',
-        'Response'        => 'Extend\Laravel\Response',
 		'Route'           => 'Illuminate\Support\Facades\Route',
 		'Schema'          => 'Illuminate\Support\Facades\Schema',
 		'Seeder'          => 'Illuminate\Database\Seeder',
@@ -182,6 +180,9 @@ return array(
 		'URL'             => 'Illuminate\Support\Facades\URL',
 		'Validator'       => 'Illuminate\Support\Facades\Validator',
 		'View'            => 'Illuminate\Support\Facades\View',
+
+        'Response'        => 'Extend\Laravel\Response',
+        'Helper'          => 'Extend\Laravel\Helper',
 
         'AuthToken' => 'Tappleby\Support\Facades\AuthToken',
         'AuthTokenController' => 'Tappleby\Support\Facades\AuthTokenController',

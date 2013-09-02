@@ -3,7 +3,7 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateLessonsTable extends Migration {
+class CreateVideosTable extends Migration {
 
 	/**
 	 * Run the migrations.
@@ -12,13 +12,19 @@ class CreateLessonsTable extends Migration {
 	 */
 	public function up()
 	{
-		Schema::create('lessons', function(Blueprint $table)
+		Schema::create('videos', function(Blueprint $table)
 		{
 			$table->increments('id');
+            $table->integer('chapter_id');
+
             $table->string('name');
             $table->string('description');
-            $table->string('chapter_length');
+            $table->string('video_link');
+
+            $table->boolean('is_public');
 			$table->timestamps();
+
+            $table->index(array('chapter_id'));
 		});
 	}
 
@@ -29,6 +35,7 @@ class CreateLessonsTable extends Migration {
 	 */
 	public function down()
 	{
-		Schema::drop('lessons');
+		Schema::drop('videos');
 	}
+
 }

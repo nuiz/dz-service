@@ -18,6 +18,8 @@ class CreateUsersLikesTable extends Migration {
             $table->integer('user_id');
             $table->integer('object_id');
 			$table->timestamps();
+
+            $table->index(array('user_id', 'object_id'));
 		});
 	}
 

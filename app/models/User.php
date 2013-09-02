@@ -3,7 +3,7 @@
 use Illuminate\Auth\UserInterface;
 use Illuminate\Auth\Reminders\RemindableInterface;
 
-class User extends DZEloquent implements UserInterface, RemindableInterface {
+class User extends DZEloquent implements UserInterface, RemindableInterface, OwnerInterface {
 
 	/**
 	 * The database table used by the model.
@@ -49,5 +49,10 @@ class User extends DZEloquent implements UserInterface, RemindableInterface {
 	{
 		return $this->email;
 	}
+
+    public function is_owner(User $user)
+    {
+        return $user->id===$this->id;
+    }
 
 }
