@@ -83,13 +83,3 @@ class GroupController extends BaseController {
         }
     }
 }
-
-/*
-
-$group = Group::findOrFail($group_id);
-$user = User::find(Input::get('user_id'));
-                $userGroup = new UserGroup();
-                $userGroup->user_id;
-
-
-                    'user_id'=> array('required'),
