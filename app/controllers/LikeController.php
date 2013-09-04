@@ -50,19 +50,19 @@ class LikeController extends BaseController implements ResourceInterface {
                 $user_like->object_id = $object_id;
 
                 try {
-                    $comment = Comment::findOrFail($object_id);
+                    $likes = Like::findOrFail($object_id);
                 }
                 catch (Exception $e) {
-                    $comment = new Comment();
-                    $comment->id = $object_id;
-                    $comment->save();
+                    $likes = new UserLike();
+                    $likes->id = $object_id;
+                    $likes->save();
                 }
-                $user_comment->save();
+                $user_like->save();
 
-                $comment->length++;
-                $comment->save();
+                $likes->length++;
+                $likes->save();
 
-                $response = $user_comment->attributesToArray();
+                $response = $user_like->attributesToArray();
             });
             return Response::json($response);
         }

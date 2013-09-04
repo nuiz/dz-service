@@ -37,6 +37,10 @@ Route::controller('/authenticate', 'AuthenticateController');
 Route::resource('user', 'UserController');
 Route::resource('user.setting', 'UserSettingController');
 Route::resource('user.change_password', 'UserChangePasswordController');
+Route::resource('user.picture', 'UserPictureController');
 
 Route::resource('showcase', 'ShowcaseController');
 Route::resource('showcase.comments', 'CommentController');
+
+Route::resource('group', 'GroupController');
+Route::resource('group.users', 'GroupUserController');

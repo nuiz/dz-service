@@ -22,9 +22,9 @@ class BaseController extends Controller {
         return $this->_fields;
     }
 
-    protected function _isset_field($fields)
+    protected function _isset_field($name)
     {
-        return array_search('setting', $fields)!==false;
+        return array_search($name, $this->_fields())!==false;
     }
 
     protected function _auth_owner($item)
@@ -57,7 +57,7 @@ class BaseController extends Controller {
             if(!$this->_auth_owner($item))
                 throw new Exception("You not have permission for this action");
         }
-        if(array_search('admin', $rule)!==false){
+        else if(array_search('admin', $rule)!==false){
             if(!$this->_auth_admin())
                 throw new Exception("You not have permission for this action");
         }

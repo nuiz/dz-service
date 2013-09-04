@@ -7,9 +7,7 @@
  * To change this template use File | Settings | File Templates.
  */
 
-use Extend\Laravel;
-
-class UserController extends BaseController implements \Extend\Laravel\ResourceInterface {
+class UserController extends BaseController implements ResourceInterface {
 
     public function _rules()
     {
@@ -36,7 +34,7 @@ class UserController extends BaseController implements \Extend\Laravel\ResourceI
 
             //owner or admin can access
             if($this->_isset_field('setting')){
-                $this->_validate_permission($id, 'user.setting', 'get');
+                $this->_validate_permission('user.setting', 'get', $user);
 
                 $user_setting = UserSetting::find($id);
                 if(is_null($user_setting)){
@@ -97,9 +95,9 @@ class UserController extends BaseController implements \Extend\Laravel\ResourceI
 
                 $user = User::findOrFail($id);
 
-                $this->_validate_permission($user, 'user', 'update');
+                $this->_validate_permission('user', 'update', $user);
                 if(Input::has('type')){
-                    $this->_validate_permission($user, 'type', 'update');
+                    $this->_validate_permission('user.type', 'update', $user);
                     $user->type = Input::get('type');
                 }
 

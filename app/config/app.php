@@ -116,6 +116,7 @@ return array(
         'Illuminate\Workbench\WorkbenchServiceProvider',
 
         'Tappleby\AuthToken\AuthTokenServiceProvider',
+        'Intervention\Image\ImageServiceProvider',
 	),
 
 	/*
@@ -187,6 +188,8 @@ return array(
         'AuthToken' => 'Tappleby\Support\Facades\AuthToken',
         'AuthTokenController' => 'Tappleby\Support\Facades\AuthTokenController',
         'AuthTokenNotAuthorizedException' => 'Tappleby\AuthToken\Exceptions\NotAuthorizedException',
+
+        'Image' => 'Intervention\Image\Facades\Image',
 	),
 
 );

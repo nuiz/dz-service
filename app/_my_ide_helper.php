@@ -11,3 +11,5 @@ exit('Only to be used as an helper for your IDE');
 class Response extends Extend\Laravel\Response{}
 
 class Helper extends Extend\Laravel\Helper{}
+
+class Image extends Intervention\Image\Image {}

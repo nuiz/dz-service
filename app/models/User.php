@@ -50,6 +50,12 @@ class User extends DZEloquent implements UserInterface, RemindableInterface, Own
 		return $this->email;
 	}
 
+    /**
+     * Get bool if check user is owner resource
+     *
+     * @param User $user
+     * @return bool
+     */
     public function is_owner(User $user)
     {
         return $user->id===$this->id;

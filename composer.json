@@ -4,7 +4,8 @@
 	"keywords": ["framework", "Laravel"],
 	"require": {
 		"laravel/framework": "4.0.*",
-		"bytesflipper/laravel-auth-token": "dev-master"
+		"bytesflipper/laravel-auth-token": "dev-master",
+		"intervention/image": "1.4.4"
 	},
 	"autoload": {
 		"classmap": [
