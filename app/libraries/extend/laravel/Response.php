@@ -27,4 +27,12 @@ class Response extends \Illuminate\Support\Facades\Response {
             )
         ));
     }
+
+    public static function pre($data)
+    {
+        return '<pre>'.
+            print_r($data, true).
+            '</pre>';
+
+    }
 }

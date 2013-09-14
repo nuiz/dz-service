@@ -64,4 +64,20 @@ class GroupUserController extends BaseController implements ResourceInterface {
             return Response::exception($e);
         }
     }
+
+    public function delete($group_id, $user_id)
+    {
+        try {
+            DB::transaction(function() use($group_id, $user_id){
+                $group = Group::find($group_id);
+                $userGroup = UserGroup::where('group_id','=',$group_id)->where('user_id','=',$user_id);
+                $userGroup->delete();
+                $group->length--;
+                $group->save();
+            });
+        }
+        catch (Exception $e) {
+            return Response::exception($e);
+        }
+    }
 }

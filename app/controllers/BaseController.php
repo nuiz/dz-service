@@ -52,14 +52,21 @@ class BaseController extends Controller {
         if(!isset($rules[$resource][$action]))
             return true;
 
+        $admin = true;
+        $owner = true;
+
         $rule = $rules[$resource][$action];
         if(array_search('owner', $rule)!==false){
             if(!$this->_auth_owner($item))
-                throw new Exception("You not have permission for this action");
+                $owner = false;
         }
-        else if(array_search('admin', $rule)!==false){
+        if(array_search('admin', $rule)!==false){
             if(!$this->_auth_admin())
-                throw new Exception("You not have permission for this action");
+                $admin = false;
+        }
+
+        if(!$owner && !$admin){
+            throw new Exception("You not have permission for this action");
         }
     }
 

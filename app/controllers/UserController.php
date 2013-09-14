@@ -25,6 +25,21 @@ class UserController extends BaseController implements ResourceInterface {
         );
     }
 
+    public function index()
+    {
+        try {
+            $users = User::all()->toArray();
+            return Response::json(array(
+                'data'=> $users,
+                'length'=> count($users)
+
+            ));
+        }
+        catch (Exception $e) {
+            return Response::exception($e);
+        }
+    }
+
     public function show($id){
         try {
             $user = User::findOrFail($id);
@@ -98,19 +113,19 @@ class UserController extends BaseController implements ResourceInterface {
                 $this->_validate_permission('user', 'update', $user);
                 if(Input::has('type')){
                     $this->_validate_permission('user.type', 'update', $user);
-                    $user->type = Input::get('type');
+                    $user->setAttribute('type', Input::get('type'));
                 }
 
-                $attributes = Input::all();
+                if(Input::has('first_name')){
+                    $user->first_name = Input::get('first_name');
+                }
 
-                $user->first_name = $attributes['first_name'];
-                $user->last_name = $attributes['last_name'];
-
-                if(isset($attributes['password'])) unset($attributes['password']);
-
+                if(Input::has('last_name')){
+                    $user->last_name = Input::get('last_name');
+                }
                 $user->save();
 
-                $response = $user->attributesToArray();
+                $response = $user->toArray();
             });
             return Response::json($response);
         }

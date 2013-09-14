@@ -19,6 +19,15 @@ class GroupController extends BaseController {
         );
     }
 
+    public function index()
+    {
+        $groups = Group::all();
+        return Response::json(array(
+            'length'=> count($groups),
+            'data'=> $groups
+        ));
+    }
+
     public function show($group_id)
     {
         try {
@@ -75,7 +84,7 @@ class GroupController extends BaseController {
                 $group = Group::find($group_id);
                 $group->delete();
 
-                Group::where('group_id', '=', $group_id)->delete();
+                UserGroup::where('group_id', '=', $group_id)->delete();
             });
         }
         catch (Exception $e) {

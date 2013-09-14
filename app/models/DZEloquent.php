@@ -15,11 +15,13 @@ abstract class DZEloquent extends Eloquent {
         if(!isset($this->_dz_type))
             throw new Exception(__CLASS__.' is require property _dz_type');
 
-        $dz_object = new DzObject();
-        $dz_object->type = $this->_dz_type;
-        $dz_object->save();
+        if(!$this->exists){
+            $dz_object = new DzObject();
+            $dz_object->type = $this->_dz_type;
+            $dz_object->save();
 
-        $this->id = $dz_object->id;
+            $this->id = $dz_object->id;
+        }
         return parent::save($options);
     }
 
