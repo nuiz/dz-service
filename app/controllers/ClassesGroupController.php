@@ -8,7 +8,7 @@
  */
 
 class ClassesGroupController extends BaseController {
-    public function __rules()
+    public function _rules()
     {
         return array(
             'group'=> array(
@@ -19,11 +19,11 @@ class ClassesGroupController extends BaseController {
         );
     }
 
-    public function index()
+    public function index($class_id)
     {
         $groups = Group::all();
         return Response::json(array(
-            'length'=> count($groups->count()),
+            'length'=> $groups->count(),
             'data'=> $groups->toArray()
         ));
     }

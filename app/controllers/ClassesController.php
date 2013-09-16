@@ -8,7 +8,7 @@
  */
 
 class ClassesController extends BaseController {
-    public function __rules()
+    public function _rules()
     {
         return array();
     }
@@ -35,5 +35,17 @@ class ClassesController extends BaseController {
             'length'=> $classes->count(),
             'data'=> $data
         ));
+    }
+
+    public function store()
+    {
+        try {
+            $classed = new Classes(Input::all());
+            $classed->save();
+            return  Response::json($classed);
+        }
+        catch (Exception $e) {
+            return Response::exception($e);
+        }
     }
 }

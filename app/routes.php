@@ -42,6 +42,6 @@ Route::resource('user.picture', 'UserPictureController');
 Route::resource('showcase', 'ShowcaseController');
 Route::resource('showcase.comments', 'CommentController');
 
-Route::resource('classes', 'ClassesController');
-Route::resource('classes.group', 'ClassesGroupController');
-//Route::resource('classes.group.users', 'ClassesGroupUserController');
+Route::resource('class', 'ClassesController');
+Route::resource('class.group', 'ClassesGroupController');
+Route::resource('class.group.user', 'ClassesGroupUserController');
