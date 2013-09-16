@@ -7,7 +7,7 @@
  * To change this template use File | Settings | File Templates.
  */
 
-class GroupController extends BaseController {
+class ClassesGroupController extends BaseController {
     public function __rules()
     {
         return array(
@@ -23,8 +23,8 @@ class GroupController extends BaseController {
     {
         $groups = Group::all();
         return Response::json(array(
-            'length'=> count($groups),
-            'data'=> $groups
+            'length'=> count($groups->count()),
+            'data'=> $groups->toArray()
         ));
     }
 

@@ -28,11 +28,10 @@ class UserController extends BaseController implements ResourceInterface {
     public function index()
     {
         try {
-            $users = User::all()->toArray();
+            $users = User::all();
             return Response::json(array(
-                'data'=> $users,
-                'length'=> count($users)
-
+                'data'=> $users->toArray(),
+                'length'=> $users->count()
             ));
         }
         catch (Exception $e) {

@@ -10,6 +10,8 @@
 namespace Extend\Laravel;
 
 
+use Illuminate\Support\Collection;
+
 class Helper {
     public static function genToken($len = 32, $md5 = true) {
 
@@ -50,5 +52,10 @@ class Helper {
             # Trim the token
             $token = substr($md5token, 0, $len);
         } return $token;
+    }
+
+    public function find_in_collection(Collection $collection, $key, $value)
+    {
+
     }
 }
