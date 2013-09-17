@@ -26,6 +26,7 @@ App::error(function(AuthTokenNotAuthorizedException $exception) {
     return Response::exception($exception);
 });
 
+Route::resource('test', 'TestController');
 
 Route::get('auth', 'AuthTokenController@index');
 Route::post('auth', 'AuthTokenController@store');

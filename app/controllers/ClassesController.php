@@ -40,11 +40,46 @@ class ClassesController extends BaseController {
     public function store()
     {
         try {
-            $classed = new Classes(Input::all());
+            $classed = new Classes();
+            $validator = Validator::make(Input::all(), array(
+                'name'=> 'required'
+            ));
+            if($validator->fails()){
+                throw new Exception($validator->errors());
+            }
+            $classed->name = Input::get('name');
+
             $classed->save();
             return  Response::json($classed);
         }
         catch (Exception $e) {
+            return Response::exception($e);
+        }
+    }
+
+    public function show($id){
+        try {
+            $classed = Classes::find($id);
+            return Response::json($classed);
+        }
+        catch (Exception $e) {
+            return Response::exception($e);
+        }
+    }
+
+    public function destroy($id){
+        try {
+            $response = array();
+            DB::transaction(function() use(&$response, $id){
+                $classed = Classes::find($id);
+                $response = $classed->toArray();
+                $classed->delete();
+            });
+            return Response::json(array('delete' => 'delete method'));
+            return Response::json($response);
+        }
+        catch (Exception $e) {
+            DB::rollBack();
             return Response::exception($e);
         }
     }
