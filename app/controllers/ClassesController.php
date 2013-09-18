@@ -71,11 +71,10 @@ class ClassesController extends BaseController {
         try {
             $response = array();
             DB::transaction(function() use(&$response, $id){
-                $classed = Classes::find($id);
+                $classed = Classes::findOrFail($id);
                 $response = $classed->toArray();
                 $classed->delete();
             });
-            return Response::json(array('delete' => 'delete method'));
             return Response::json($response);
         }
         catch (Exception $e) {

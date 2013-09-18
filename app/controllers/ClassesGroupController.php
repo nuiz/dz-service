@@ -21,14 +21,34 @@ class ClassesGroupController extends BaseController {
 
     public function index($class_id)
     {
-        $groups = Group::all();
+        $groups = Group::where('class_id', '=', $class_id)->get();
+        $groupsData = $groups->toArray();
+
+        foreach($groupsData as $key => $groupData){
+            $users_groups = UserGroup::where('group_id', '=', $groupData['id'])->get();
+            if($users_groups->count() > 0){
+                $users_id = $users_groups->lists('id');
+                $users = User::whereIn('id', $users_id);
+
+                $usersData = $users->toArray();
+            }
+            else {
+                $usersData = array();
+            }
+
+            $groupsData[$key]['users'] = array(
+                'length'=> count($usersData),
+                'data'=> $usersData
+            );
+        }
+
         return Response::json(array(
             'length'=> $groups->count(),
-            'data'=> $groups->toArray()
+            'data'=> $groupsData
         ));
     }
 
-    public function show($group_id)
+    public function show($class_id, $group_id)
     {
         try {
             $group = Group::findOrFail($group_id);
@@ -48,7 +68,7 @@ class ClassesGroupController extends BaseController {
         }
     }
 
-    public function store()
+    public function store($class_id)
     {
         try {
             $response = array();
@@ -77,15 +97,16 @@ class ClassesGroupController extends BaseController {
         }
     }
 
-    public function delete($group_id)
+    public function destroy($class_id, $group_id)
     {
         try {
-            DB::transaction(function() use($group_id){
-                $group = Group::find($group_id);
+            $response = array();
+            DB::transaction(function() use($group_id, &$response){
+                $group = Group::findOrFail($group_id);
+                $response = $group->toArray();
                 $group->delete();
-
-                UserGroup::where('group_id', '=', $group_id)->delete();
             });
+            return Response::json($response);
         }
         catch (Exception $e) {
             return Response::exception($e);

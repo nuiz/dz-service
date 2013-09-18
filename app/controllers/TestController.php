@@ -21,7 +21,7 @@ class TestController extends Controller {
 
     public function update($id)
     {
-        return Response::json(file_get_contents('php://input'));
+        return Response::json(array(Input::all(), Input::getMethod()));
     }
 
     public function destroy($id)
