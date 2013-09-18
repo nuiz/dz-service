@@ -22,6 +22,10 @@ Event::listen('auth.token.valid', function($user)
     Auth::setUser($user);
 });
 
+App::error(function(Exception $exception){
+    return Response::exception($exception);
+});
+
 App::error(function(AuthTokenNotAuthorizedException $exception) {
     return Response::exception($exception);
 });

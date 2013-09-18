@@ -72,9 +72,8 @@ class ClassesGroupController extends BaseController {
     {
         try {
             $response = array();
-            DB::transaction(function() use(&$response){
+            DB::transaction(function() use(&$response, $class_id){
                 $validator = Validator::make(Input::all(), array(
-                    'class_id'=> array('required'),
                     'name'=> array('required'),
                     'description'=> array('required'),
                 ));
@@ -84,8 +83,7 @@ class ClassesGroupController extends BaseController {
                 $group = new Group();
                 $group->name = Input::get('name');
                 $group->description = Input::get('description');
-                $group->class_id = Input::get('class_id');
-
+                $group->class_id = $class_id;
 
                 $group->save();
                 $response = $group->toArray();
@@ -93,6 +91,7 @@ class ClassesGroupController extends BaseController {
             return Response::json($response);
         }
         catch (Exception $e) {
+            DB::rollBack();
             return Response::exception($e);
         }
     }

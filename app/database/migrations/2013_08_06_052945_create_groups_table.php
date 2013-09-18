@@ -19,7 +19,7 @@ class CreateGroupsTable extends Migration {
 
             $table->string('name');
             $table->string('description');
-            $table->integer('member_count');
+            $table->integer('member_length');
 			$table->timestamps();
 
             $table->index(array('class_id'));

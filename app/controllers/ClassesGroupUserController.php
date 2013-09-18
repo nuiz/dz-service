@@ -10,17 +10,59 @@
 class ClassesGroupUserController extends BaseController {
     public function index($class_id, $group_id)
     {
+        $not = true;
+        if(Input::has('import') && Input::get('import')=='false')
+            $not = false;
+
         $usersGroups = UserGroup::where('group_id', '=', $group_id)->get();
-        $arr_id = $usersGroups->fetch('user_id');
+        $users_id = $usersGroups->lists('user_id');
 
         $users = array();
-        if($arr_id->count()>0)
-            $users = User::whereIn('id', $arr_id->toArray())->get()->toArray();
+        if(count($users_id)>0)
+            if($not) $users = User::whereNotIn('id', $users_id, 'and')->get()->toArray();
+            else $users = User::whereIn('id', $users_id, 'and')->get()->toArray();
         else
+            if(!$not) $users = User::all()->toArray();
 
         return Response::json(array(
             'length'=> count($users),
             'data'=> $users
         ));
+    }
+
+    public function store($class_id, $group_id)
+    {
+        try {
+            $response = array();
+            DB::transaction(function() use ($class_id, $group_id, &$response){
+                $validator = Validator::make(Input::all(), array(
+                    'user_id'=> array('required')
+                ));
+                if($validator->fails()){
+                    throw new Exception($validator->errors());
+                }
+                $group = Group::findOrFail($group_id);
+                $user_group = UserGroup::where('group_id', '=', $group_id)->where('user_id', '=', Input::get('user_id'))->get();
+                $joined = $user_group->count() > 0?
+                    true:
+                    false;
+
+                if(!$joined){
+                    $user_group = new UserGroup();
+                    $user_group->user_id = Input::get('user_id');
+                    $user_group->group_id = $group_id;
+                    $user_group->save();
+
+                    $group->user_length = UserGroup::where('group_id', '=', $group_id)->count();
+                    $group->save();
+                }
+
+                $response = $group->toArray();
+            });
+            return Response::json($response);
+        }
+        catch (Exception $e) {
+            return Response::exception($e);
+        }
     }
 }
