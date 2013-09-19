@@ -10,9 +10,9 @@
 class ClassesGroupUserController extends BaseController {
     public function index($class_id, $group_id)
     {
-        $not = true;
+        $not = false;
         if(Input::has('import') && Input::get('import')=='false')
-            $not = false;
+            $not = true;
 
         $usersGroups = UserGroup::where('group_id', '=', $group_id)->get();
         $users_id = $usersGroups->lists('user_id');
@@ -62,6 +62,30 @@ class ClassesGroupUserController extends BaseController {
             return Response::json($response);
         }
         catch (Exception $e) {
+            DB::rollBack();
+            return Response::exception($e);
+        }
+    }
+
+    public function destroy($class_id, $group_id, $user_id)
+    {
+        try {
+            $response = array();
+            DB::transaction(function() use ($class_id, $group_id, $user_id, &$response){
+                $group = Group::findOrFail($group_id);
+                $user_group = UserGroup::where('user_id', '=', $user_id)->where('group_id', '=', $group_id)->get();
+                $user_group = $user_group->first();
+                $user_group->delete();
+
+                $group->user_length = UserGroup::where('group_id', '=', $group_id)->count();
+                $group->save();
+
+                $response = $group->toArray();
+            });
+            return Response::json($response);
+        }
+        catch (Exception $e) {
+            DB::rollBack();
             return Response::exception($e);
         }
     }

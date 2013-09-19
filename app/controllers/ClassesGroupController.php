@@ -28,7 +28,7 @@ class ClassesGroupController extends BaseController {
             $users_groups = UserGroup::where('group_id', '=', $groupData['id'])->get();
             if($users_groups->count() > 0){
                 $users_id = $users_groups->lists('id');
-                $users = User::whereIn('id', $users_id);
+                $users = User::whereIn('id', $users_id)->get();
 
                 $usersData = $users->toArray();
             }
@@ -78,7 +78,7 @@ class ClassesGroupController extends BaseController {
                     'description'=> array('required'),
                 ));
                 if($validator->fails())
-                    throw new Exception($validator->errors());
+                    throw new Exception($validator->messages()->first());
 
                 $group = new Group();
                 $group->name = Input::get('name');
