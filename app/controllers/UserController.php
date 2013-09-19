@@ -134,6 +134,62 @@ class UserController extends BaseController implements ResourceInterface {
         }
     }
 
+    public function destroy($id)
+    {
+        try {
+            $response = array();
+            DB::transaction(function() use($id, &$response) {
+                $user = User::findOrFail($id);
+                $user_setting = UserSetting::find($id);
+                $response = $user->toArray();
+
+                $user->delete();
+                if($user_setting)
+                    $user_setting->delete();
+
+                $users_groups = UserGroup::where('user_id', '=', $id)->get();
+                $groups_id = array_unique($users_groups->lists('group_id'));
+
+                UserGroup::where('user_id', '=', $id)->delete();
+                if(count($groups_id)>0){
+                    $groups = Group::whereIn('id', $groups_id)->get();
+                    foreach($groups as $key => $group) {
+                        $group->user_length = UserGroup::where('group_id', '=', $group->id)->count();
+                        $group->save();
+                    }
+                }
+
+                $users_comments = UserComment::where('user_id', '=', $id)->get();
+                $comments_id = array_unique($users_comments->lists('object_id'));
+
+                UserComment::where('user_id', '=', $id)->delete();
+                if(count($comments_id)>0){
+                    $comments = Comment::whereIn('id', $comments_id)->get();
+                    foreach($comments as $key => $comment) {
+                        $comment->length = UserComment::where('comment_id', '=', $comment->id)->count();
+                        $comment->save();
+                    }
+                }
+
+                $users_likes = UserLike::where('user_id', '=', $id)->get();
+                $likes_id = array_unique($users_likes->lists('object_id'));
+
+                UserLike::where('user_id', '=', $id)->delete();
+                if(count($likes_id)>0){
+                    $likes = Like::whereIn('id', $likes_id)->get();
+                    foreach($likes as $key => $like) {
+                        $likes->length = UserComment::where('comment_id', '=', $like->id)->count();
+                        $likes->save();
+                    }
+                }
+            });
+            return Response::json($response);
+        }
+        catch (Exception $e) {
+            return Response::exception($e);
+        }
+    }
+
     public function postRegister()
     {
         try {

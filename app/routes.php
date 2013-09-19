@@ -50,3 +50,5 @@ Route::resource('showcase.comments', 'CommentController');
 Route::resource('class', 'ClassesController');
 Route::resource('class.group', 'ClassesGroupController');
 Route::resource('class.group.user', 'ClassesGroupUserController');
+
+Route::resource('news', 'NewsController');
