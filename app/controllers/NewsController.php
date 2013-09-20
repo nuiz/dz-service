@@ -12,9 +12,28 @@ class NewsController extends BaseController {
     {
         try {
             $news = News::all();
+            $data = $news->toArray();
+            $pictures_id = $news->lists('picture_id');
+
+            if(count($pictures_id)>0){
+                $pictures = Picture::whereIn('id', $pictures_id)->get();
+                foreach($data as $key => $value) {
+                    $buffer = $pictures->filter(function($item) use ($value){
+                        if($value['picture_id']==$item->id){
+                            return true;
+                        }
+                    });
+                    if($buffer->count()>0){
+                        $buffer2 = $buffer->first()->toArray();
+                        $buffer2['link'] = URL::to('picture/'.$buffer2['picture_link']);
+                        $data[$key]['picture'] = $buffer2;
+                    }
+                }
+            }
+
             return Response::json(array(
                 'length'=> $news->count(),
-                'data'=> $news->toArray()
+                'data'=> $data
             ));
         }
         catch (Exception $e) {
@@ -52,6 +71,7 @@ class NewsController extends BaseController {
 
                     $picture->picture_link = $name;
                     $picture->save();
+                    $news->picture_id = $picture->id;
                 }
 
                 $news->save();
@@ -67,10 +87,20 @@ class NewsController extends BaseController {
     public function destroy($id)
     {
         try {
-            DB::transaction(function() use($id) {
+            $res = array();
+            DB::transaction(function() use($id, &$res) {
                 $news = News::findOrFail($id);
-                return Response::json($news);
+                $res = $news->toArray();
+                $picture = Picture::find($news->picture_id);
+                if(!is_null($picture)){
+                    $path = 'picture/'.$picture->picture_link;
+
+                    $picture->delete();
+                    @unlink($path);
+                }
+                $news->delete();
             });
+            return Response::json($res);
         }
         catch (Exception $e) {
             DB::rollBack();

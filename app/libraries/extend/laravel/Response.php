@@ -24,6 +24,9 @@ class Response extends \Illuminate\Support\Facades\Response {
                 'code'=> $e->getCode(),
                 'type'=> get_class($e),
                 'message'=> $e->getMessage(),
+                'file'=> $e->getFile(),
+                'line'=> $e->getLine(),
+                'trace'=> $e->getTrace()
             )
         ));
     }
