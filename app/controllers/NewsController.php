@@ -18,7 +18,7 @@ class NewsController extends BaseController {
             ));
         }
         catch (Exception $e) {
-
+            return Response::exception($e);
         }
     }
 
@@ -29,7 +29,7 @@ class NewsController extends BaseController {
             DB::transaction(function() use (&$res){
                 $validator = Validator::make(Input::all(), array(
                     'name'=> array('required'),
-                    'description'=> array('required')
+                    'message'=> array('required')
                 ));
                 if($validator->fails()){
                     throw new Exception($validator->errors()->first());
@@ -37,7 +37,22 @@ class NewsController extends BaseController {
 
                 $news = new News();
                 $news->name = Input::get('name');
-                $news->description = Input::get('description');
+                $news->message = Input::get('message');
+
+                if(Input::hasFile('picture')){
+                    $picture = new Picture();
+                    list($width, $height, $type, $attr) = getimagesize(Input::file('picture')->getRealPath());
+                    $picture->size_x = $width;
+                    $picture->size_y = $height;
+                    $picture->save();
+
+                    $name = $picture->id.'.'.Input::file('picture')->getClientOriginalExtension();
+                    Input::file('picture')->move('picture', $name);
+                    chmod('picture/'.$name, 0777);
+
+                    $picture->picture_link = $name;
+                    $picture->save();
+                }
 
                 $news->save();
             });
