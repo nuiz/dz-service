@@ -30,6 +30,17 @@ class ClassesGroupUserController extends BaseController {
         ));
     }
 
+    public function show($class_id, $group_id, $id)
+    {
+        try {
+            $item = Activity::findOrFail($id);
+            return Response::json($item);
+        }
+        catch (Exception $e) {
+            return Response::exception($e);
+        }
+    }
+
     public function store($class_id, $group_id)
     {
         try {

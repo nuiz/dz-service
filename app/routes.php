@@ -52,3 +52,10 @@ Route::resource('class.group', 'ClassesGroupController');
 Route::resource('class.group.user', 'ClassesGroupUserController');
 
 Route::resource('news', 'NewsController');
+
+Route::resource('lesson', 'LessonController');
+Route::resource('lesson.chapter', 'LessonChapterController');
+Route::resource('lesson.chapter.video', 'LessonChapterVideoController');
+
+
+Route::resource('activity', 'ActivityController');

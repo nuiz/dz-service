@@ -41,6 +41,19 @@ class NewsController extends BaseController {
         }
     }
 
+    public function show($id)
+    {
+        try {
+            $item = Activity::findOrFail($id)->toArray();
+            $item['picture'] = Picture::findOrFail($item['picture_id']);
+            $item['picture']['link'] = URL::to('picture/'.$item['picture']['picture_link']);
+            return Response::json($item);
+        }
+        catch (Exception $e) {
+            return Response::exception($e);
+        }
+    }
+
     public function store()
     {
         try {
