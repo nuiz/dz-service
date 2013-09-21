@@ -4,10 +4,10 @@ DZ API
 การใช้งาน
 ระบบ ยืนยันตัวตนใช้ระบ Token
 
-post /auth โดยส่งค่า username(email) กับ password ไป จะได้ข้อมูล user และค่า token กลับมา
+post /auth โดยส่งตัวแปร username(เป็น email ของ user) กับ password ไป จะได้ข้อมูล user และค่า token กลับมา
+เมื่อมีการ login ใหม่ ระบบจะทำการสุ่ม token ใหม่และ token เก่าจะใช้ไม่ได้
 
 เมื่อใดก็ตามที่มีความผิดพลาดเกิดขึ้น ระบบจะส่ง json กลับมาเป็น { error: { message, code, type } }
-
 
 เมื่อได้ token แล้ว เวลาจะ request ในฐานะ user ต้องใส่ header ชื่อ X-Auth-Token และใส่ token เข้าไป
 
