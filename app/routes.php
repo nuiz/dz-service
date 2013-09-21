@@ -59,3 +59,6 @@ Route::resource('lesson.chapter.video', 'LessonChapterVideoController');
 
 
 Route::resource('activity', 'ActivityController');
+
+Route::resource('dz_object.like', 'DZObjectLikeController');
+Route::resource('dz_object.comment', 'DZObjectCommentController');
