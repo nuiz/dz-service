@@ -211,6 +211,13 @@ class UserController extends BaseController implements ResourceInterface {
                 $user->password = $md5_password;
                 $user->type = 'normal';
                 $user->save();
+                
+                $data['user'] = $user->toArray();
+                
+                $authToken = AuthToken::create($user);
+                $publicToekn = AuthToken::publicToken($authToken);
+                
+                $data['token'] = $publicToken;
             });
             return Response::json($data);
         }
