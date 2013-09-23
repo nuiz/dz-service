@@ -215,7 +215,7 @@ class UserController extends BaseController implements ResourceInterface {
                 $data['user'] = $user->toArray();
                 
                 $authToken = AuthToken::create($user);
-                $publicToekn = AuthToken::publicToken($authToken);
+                $publicToken = AuthToken::publicToken($authToken);
                 
                 $data['token'] = $publicToken;
             });
