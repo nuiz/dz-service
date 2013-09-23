@@ -205,7 +205,7 @@ class UserController extends BaseController implements ResourceInterface {
                 $email = $_POST['email'];
                 $password = $_POST['password'];
 
-                $md5_password = hash::make($password);
+                $md5_password = Hash::make($password);
                 $user = new User();
                 $user->email = $email;
                 $user->password = $md5_password;
