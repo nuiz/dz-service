@@ -11,13 +11,21 @@ class NewsController extends BaseController {
     public function index()
     {
         try {
+            $user = Auth::getUser();
+
             $news = News::all();
             $data = $news->toArray();
             $pictures_id = $news->lists('picture_id');
+            $news_id =$news->lists('id');
 
             if(count($pictures_id)>0){
                 $pictures = Picture::whereIn('id', $pictures_id)->get();
-                foreach($data as $key => $value) {
+            }
+            if(count($data)> 0 & $this->_isset_field('like')){
+                $likes = Like::whereIn('id', $news_id)->get();
+            }
+            foreach($data as $key => $value) {
+                if($pictures_id>0){
                     $buffer = $pictures->filter(function($item) use ($value){
                         if($value['picture_id']==$item->id){
                             return true;
@@ -28,6 +36,17 @@ class NewsController extends BaseController {
                         $buffer2['link'] = URL::to('picture/'.$buffer2['picture_link']);
                         $data[$key]['picture'] = $buffer2;
                     }
+                }
+                if($this->_isset_field('like')){
+                    $data[$key]['like'] = $likes->filter(function($item) use ($value){
+                        return $item->id == $value['id'];
+                    })->first()->toArray();
+                    if(!is_null($user)){
+                        $data[$key]['like']['is_liked'] = UserLike::where('user_id', '=', $user->id)->where('object_id', '=', $value['id']);
+                    }
+                }
+                if($this->_isset_field('comment')){
+                    $data[$key]['comment'] = Comment::find($value['id'])->toArray();
                 }
             }
 
@@ -47,6 +66,18 @@ class NewsController extends BaseController {
             $item = Activity::findOrFail($id)->toArray();
             $item['picture'] = Picture::findOrFail($item['picture_id']);
             $item['picture']['link'] = URL::to('picture/'.$item['picture']['picture_link']);
+
+            if($this->_isset_field('like')){
+                $item['like'] = Like::find($id)->toArray();
+                if(!is_null(Auth::getUser())){
+                    $item['like']['is_liked'] = UserLike::where('user_id', '=', Auth::getUser()->id)->where('object_id', '=', $item['id']);
+                }
+            }
+
+            if($this->_isset_field('comment')){
+                $item['comment'] = Comment::find($id)->toArray();
+            }
+
             return Response::json($item);
         }
         catch (Exception $e) {

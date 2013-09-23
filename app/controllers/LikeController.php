@@ -19,22 +19,24 @@ class LikeController extends BaseController implements ResourceInterface {
             $response = array();
             DB::transaction(function() use($object_id, &$response){
                 $dz_object = DzObject::findOrFail($object_id);
-                try {
-                    $likes = Comment::findOrFail($object_id);
-                }
-                catch (Exception $e) {
-                    $likes = new Comment();
+
+                $likes = Like::findOrFail($object_id);
+
+                if (is_null($likes)) {
+                    $likes = new Like();
                     $likes->id = $object_id;
                     $likes->length = Like::where('object_id', '=', $object_id)->count();
                     $likes->save();
                 }
                 $users_likes = UserLike::where('object_id', '=', $object_id)->get();
                 $response = $likes->attributesToArray();
-                $response['data'] = $users_likes->all();
-                //$response['data'] = $users_comments->toArray();
+                $response['data'] = $users_likes->toArray();
+
+                $user = Auth::getUser();
+                if(!is_null($user))
+                    $response['is_like'] = Like::where('object_id', '=', $object_id)->where('user_id', '=', $user->id)->count() > 0;
             });
 
-            //print_r($response);
             return Response::json($response);
         } catch (Exception $e) {
             return Response::exception($e);
@@ -46,25 +48,54 @@ class LikeController extends BaseController implements ResourceInterface {
         try {
             $response = null;
             DB::transaction(function() use ($object_id, &$response){
-                $user_like = new UserComment();
+                $user = Auth::getUser();
+                if(is_null($user)){
+                    throw new Exception('this action is required authenticate');
+                }
+
+                $user_like = new UserLike();
                 $user_like->object_id = $object_id;
 
-                try {
-                    $likes = Like::findOrFail($object_id);
-                }
-                catch (Exception $e) {
+                $likes = Like::findOrFail($object_id);
+                if(is_null($likes)){
                     $likes = new UserLike();
                     $likes->id = $object_id;
                     $likes->save();
                 }
                 $user_like->save();
 
-                $likes->length++;
+                $likes->length = UserLike::where('object_id', '=', $object_id)->count();
                 $likes->save();
 
-                $response = $user_like->attributesToArray();
+                $response = $likes->toArray();
             });
             return Response::json($response);
+        }
+        catch (Exception $e) {
+            DB::rollBack();
+            return Response::exception($e);
+        }
+    }
+
+    public function unlike($object_id)
+    {
+        try {
+            $res = array();
+            DB::transaction(function() use(&$res, $object_id){
+                $user = Auth::getUser();
+                if(is_null($user)){
+                    throw new Exception('this action is required authenticate');
+                }
+
+                $like = Like::findOrFail($object_id);
+
+                UserLike::where('object_id', '=', $object_id)->where('user_id', '=', $user->id)->delete();
+
+                $like->length = UserLike::where('object_id', '=', $object_id)->count();
+                $like->save();
+
+                $res = $like->toArray();
+            });
         }
         catch (Exception $e) {
             DB::rollBack();

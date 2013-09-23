@@ -8,7 +8,7 @@
  */
 
 class UserPictureController extends BaseController {
-    protected $_profile_path = 'pictures/profiles';
+    protected $_profile_path = 'picture/profile';
     protected $_profile_extension = 'jpg';
 
     public function _rules()

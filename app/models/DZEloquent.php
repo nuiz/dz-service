@@ -20,6 +20,12 @@ abstract class DZEloquent extends Eloquent {
             $dz_object->type = $this->_dz_type;
             $dz_object->save();
 
+            $like = new Like();
+            $like->id = $dz_object->id;
+
+            $comment = new Comment();
+            $comment->id = $dz_object->id;
+
             $this->id = $dz_object->id;
         }
         return parent::save($options);
@@ -29,6 +35,14 @@ abstract class DZEloquent extends Eloquent {
     {
         $dz_object = DzObject::find($this->id);
         $dz_object->delete();
+
+        $like = Like::find($this->id);
+        $like->delete();
+        UserLike::where('object_id', '=', $this->id)->delete();
+        $comment = Comment::find($this->id);
+        $comment->delete();
+        UserComment::where('object_id', '=', $this->id)->delete();
+
         return parent::delete();
     }
 }

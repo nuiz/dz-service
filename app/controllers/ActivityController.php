@@ -10,17 +10,32 @@
 class ActivityController extends BaseController {
     public function index()
     {
-        $items = Activity::all();
+        $items = Activity::all()->toArray();
+        foreach($items as $key => $value){
+            if($this->_isset_field('like')){
+                $items[$key]['like'] = Like::find($value['id'])->toArray();
+                if(!is_null(Auth::getUser())){
+                    $items[$key]['like']['is_liked'] = UserLike::where('user_id', '=', Auth::getUser()->id)->where('object_id', '=', $value['id'])->count() > 0;
+                }
+            }
+        }
+
         return Response::json(array(
-            'length'=> $items->count(),
-            'data'=> $items->toArray()
+            'length'=> count($items),
+            'data'=> $items
         ));
     }
 
     public function show($id)
     {
         try {
-            $item = Activity::findOrFail($id);
+            $item = Activity::findOrFail($id)->toArray();
+            if($this->_isset_field('like')){
+                $items['like'] = Like::find($id)->toArray();
+                if(!is_null(Auth::getUser())){
+                    $items['like']['is_liked'] = UserLike::where('user_id', '=', Auth::getUser()->id)->where('object_id', '=', $id)->count() > 0;
+                }
+            }
             return Response::json($item);
         }
         catch (Exception $e) {

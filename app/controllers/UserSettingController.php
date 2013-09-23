@@ -40,8 +40,20 @@ class UserSettingController extends BaseController implements ResourceInterface 
 
     public function index($user_id)
     {
-        $setting = UserSetting::find($user_id);
-        return Response::json($setting);
+        try {
+            $user = User::findOrFail($user_id);
+            $setting = UserSetting::find($user_id);
+            if(is_null($setting)){
+                $setting = new UserSetting();
+                $setting->id = $user->id;
+                $setting->save();
+            }
+            return Response::json($setting);
+        }
+        catch (Exception $e) {
+            DB::rollBack();
+            return Response::exception($e);
+        }
     }
 
     public function store($user_id){

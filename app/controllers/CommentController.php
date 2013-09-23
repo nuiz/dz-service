@@ -21,8 +21,8 @@ class CommentController extends BaseController implements ResourceInterface {
     public function index($object_id)
     {
         try {
-            $response = array();
-            DB::transaction(function() use($object_id, &$response){
+            $res = array();
+            DB::transaction(function() use(&$res, $object_id, &$response){
                 $dz_object = DzObject::findOrFail($object_id);
                 try {
                     $comments = Comment::findOrFail($object_id);
@@ -34,13 +34,11 @@ class CommentController extends BaseController implements ResourceInterface {
                     $comments->save();
                 }
                 $users_comments = UserComment::where('object_id', '=', $object_id)->get();
-                $response = $comments->attributesToArray();
-                $response['data'] = $users_comments->all();
-                //$response['data'] = $users_comments->toArray();
+                $res = $comments->toArray();
+                $res['data'] = $users_comments->toArray();
             });
 
-            //print_r($response);
-            return Response::json($response);
+            return Response::json($res);
         } catch (Exception $e) {
             return Response::exception($e);
         }
@@ -49,32 +47,33 @@ class CommentController extends BaseController implements ResourceInterface {
     public function store($object_id)
     {
         try {
-            $response = null;
-            DB::transaction(function() use ($object_id, &$response){
-                $this->_require_authenticate();
+            $res = null;
+            DB::transaction(function() use ($object_id, &$res){
+                //$this->_require_authenticate();
                 $user = Auth::getUser();
 
+                if(is_null($user)){
+                    throw new Exception('this action require authenticate');
+                }
                 $user_comment = new UserComment();
                 $user_comment->user_id = $user->id;
                 $user_comment->object_id = $object_id;
                 $user_comment->message = Input::get('message');
 
-                try {
-                    $comment = Comment::findOrFail($object_id);
-                }
-                catch (Exception $e) {
+                $comment = Comment::find($object_id);
+
+                if (is_null($comment)) {
                     $comment = new Comment();
                     $comment->id = $object_id;
-                    $comment->save();
                 }
                 $user_comment->save();
 
-                $comment->length++;
+                $comment->length = UserComment::where('object_id', '=', $object_id)->count();
                 $comment->save();
 
-                $response = $user_comment->attributesToArray();
+                $res = $user_comment->attributesToArray();
             });
-            return Response::json($response);
+            return Response::json($res);
         }
         catch (Exception $e) {
             DB::rollBack();
@@ -82,14 +81,23 @@ class CommentController extends BaseController implements ResourceInterface {
         }
     }
 
-    public function destroy($id)
+    public function destroy($object_id, $id)
     {
         try {
-            $this->_validate_permission('comment.destroy', 'delete');
-            $comment = Comment::find($id);
-            $comment->delete();
+            $res = array();
+            DB::transaction(function() use(&$res, $object_id, $id){
+                $comment = Comment::findOrFail($object_id);
+                $user_comment = UserComment::findOrFail($id);
+
+                $user_comment->delete();
+                $comment->length = UserComment::where('object_id', '=', $object_id)->count();
+                $comment->save();
+
+                $res = $comment->toArray();
+            });
         }
         catch (Exception $e) {
+            DB::rollBack();
             return Response::exception($e);
         }
     }

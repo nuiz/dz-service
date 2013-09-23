@@ -15,6 +15,16 @@ class LessonChapterVideoController extends BaseController {
             $data = $videos->toArray();
             foreach($data as $key => $value){
                 $data[$key]['link'] = URL::to('video/'.$value['video_link']);
+
+                if($this->_isset_field('like')){
+                    $data[$key]['like'] = Like::find($value['id'])->toArray();
+                    if(is_null(Auth::getUser())){
+                        $data[$key]['like']['is_liked'] = UserLike::where('user_id', '=', Auth::getUser()->id)->where('object_id', '=', $value['id'])->count() > 0;
+                    }
+                }
+                if($this->_isset_field('comment')){
+                    $data[$key]['comment'] = Comment::find($value['id'])->toArray();
+                }
             }
             return Response::json(array(
                 'length'=> $videos->count(),
@@ -32,6 +42,16 @@ class LessonChapterVideoController extends BaseController {
             $item = Activity::findOrFail($id);
             $data = $item->toArray();
             $data['link'] = URL::to('video/'.$data['video_link']);
+
+            if($this->_isset_field('like')){
+                $data['like'] = Like::find($id)->toArray();
+                if(is_null(Auth::getUser())){
+                    $data['like']['is_liked'] = UserLike::where('user_id', '=', Auth::getUser()->id)->where('object_id', '=', $id)->count() > 0;
+                }
+            }
+            if($this->_isset_field('comment')){
+                $data['comment'] = Comment::find($id)->toArray();
+            }
             return Response::json($data);
         }
         catch (Exception $e) {
