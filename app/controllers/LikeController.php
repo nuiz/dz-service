@@ -77,7 +77,7 @@ class LikeController extends BaseController implements ResourceInterface {
         }
     }
 
-    public function unlike($object_id)
+    public function delete($object_id, $user_id)
     {
         try {
             $res = array();
