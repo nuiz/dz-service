@@ -22,9 +22,11 @@ abstract class DZEloquent extends Eloquent {
 
             $like = new Like();
             $like->id = $dz_object->id;
+            $like->save();
 
             $comment = new Comment();
             $comment->id = $dz_object->id;
+            $comment->save();
 
             $this->id = $dz_object->id;
         }
