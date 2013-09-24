@@ -102,6 +102,47 @@ class LessonChapterVideoController extends BaseController {
         }
     }
 
+    public function update($lesson_id, $chapter_id, $id)
+    {
+        try {
+            $res = array();
+            DB::transaction(function() use(&$res, $lesson_id, $chapter_id, $id){
+                $item = Video::findOrFail($id);
+
+                if(Input::has('name')){
+                    $item = Input::get('name');
+                }
+
+                if(Input::has('description')){
+                    $item->name = Input::get('description');
+                }
+
+                if(Input::hasFile('video')){
+                    $videoFile = Input::file('video');
+                    $ext = strtolower($videoFile->getClientOriginalExtension());
+                    $allows = array('mp4', '3gp');
+                    if(!in_array($ext, $allows) ) {
+                        throw new Exception('file upload not allowed');
+                    }
+
+                    $name = $item->id.'.'.$ext;
+                    $videoFile->move('video', $name);
+                    chmod('video/'.$name, 0777);
+
+                    $item->video_link = $name;
+                }
+
+                $item->save();
+                $res = $item->toArray();
+            });
+            return Response::json($res);
+        }
+        catch (Exception $e){
+            DB::rollBack();
+            return Response::exception($e);
+        }
+    }
+
     public function destroy($lesson_id, $chapter_id, $id)
     {
         try {
@@ -124,10 +165,5 @@ class LessonChapterVideoController extends BaseController {
             DB::rollBack();
             return Response::exception($e);
         }
-    }
-
-    public function update($lesson_id, $chapter_id, $id)
-    {
-
     }
 }

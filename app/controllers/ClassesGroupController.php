@@ -96,6 +96,32 @@ class ClassesGroupController extends BaseController {
         }
     }
 
+    public function update($class_id, $id)
+    {
+        try {
+            $res = array();
+            DB::transaction(function() use(&$res, $class_id, $id){
+                $item = Group::findOrFail($id);
+
+                if(Input::has('name')){
+                    $item = Input::get('name');
+                }
+
+                if(Input::has('description')){
+                    $item->name = Input::get('description');
+                }
+
+                $item->save();
+                $res = $item->toArray();
+            });
+            return Response::json($res);
+        }
+        catch (Exception $e){
+            DB::rollBack();
+            return Response::exception($e);
+        }
+    }
+
     public function destroy($class_id, $group_id)
     {
         try {

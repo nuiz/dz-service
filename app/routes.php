@@ -61,3 +61,5 @@ Route::resource('activity', 'ActivityController');
 
 Route::resource('dz_object.comment', 'CommentController');
 Route::resource('dz_object.like', 'LikeController');
+
+Route::controller('facebook', 'FacebookController');

@@ -128,6 +128,48 @@ class NewsController extends BaseController {
         }
     }
 
+    public function update($id)
+    {
+        try {
+            $res = array();
+            DB::transaction(function() use(&$res, $id){
+                $item = News::findOrFail($id);
+
+                if(Input::has('name')){
+                    $item = Input::get('name');
+                }
+
+                if(Input::has('message')){
+                    $item->name = Input::get('message');
+                }
+
+                if(Input::hasFile('picture')){
+                    $picture = new Picture();
+                    list($width, $height, $type, $attr) = getimagesize(Input::file('picture')->getRealPath());
+                    $picture->size_x = $width;
+                    $picture->size_y = $height;
+                    $picture->save();
+
+                    $name = $picture->id.'.'.Input::file('picture')->getClientOriginalExtension();
+                    Input::file('picture')->move('picture', $name);
+                    chmod('picture/'.$name, 0777);
+
+                    $picture->picture_link = $name;
+                    $picture->save();
+                    $item->picture_id = $picture->id;
+                }
+
+                $item->save();
+                $res = $item->toArray();
+            });
+            return Response::json($res);
+        }
+        catch (Exception $e){
+            DB::rollBack();
+            return Response::exception($e);
+        }
+    }
+
     public function destroy($id)
     {
         try {

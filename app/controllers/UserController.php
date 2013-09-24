@@ -202,6 +202,10 @@ class UserController extends BaseController implements ResourceInterface {
                 if ($validator->fails())
                     throw new Exception($validator->errors());
 
+                if(User::where('email', '=', Input::get('email'))->count() > 0){
+                    throw new Exception('email duplicate');
+                }
+
                 $email = $_POST['email'];
                 $password = $_POST['password'];
 

@@ -67,6 +67,32 @@ class ClassesController extends BaseController {
         }
     }
 
+    public function update($id)
+    {
+        try {
+            $res = array();
+            DB::transaction(function() use(&$res, $id){
+                $item = Classes::findOrFail($id);
+
+                if(Input::has('name')){
+                    $item = Input::get('name');
+                }
+
+                if(Input::has('description')){
+                    $item->name = Input::get('description');
+                }
+
+                $item->save();
+                $res = $item->toArray();
+            });
+            return Response::json($res);
+        }
+        catch (Exception $e){
+            DB::rollBack();
+            return Response::exception($e);
+        }
+    }
+
     public function destroy($id){
         try {
             $response = array();

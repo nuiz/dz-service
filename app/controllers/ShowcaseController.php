@@ -71,19 +71,13 @@ class ShowcaseController extends BaseController implements ResourceInterface {
     public function update($id){
         $response = array();
         try {
-            $validator = Validator::make(Input::all(), array(
-                'id'=> array('required')
-            ));
-            if($validator->fails())
-                throw new Exception($validator->errors());
-
             DB::transaction(function() use($id, &$response){
-                $showcase = Showcase::find($id);
+                $showcase = Showcase::findOrFail($id);
                 if(Input::has('youtube_id'))
                     $showcase->youtube_id = Input::get('youtube_id');
                 $showcase->save();
 
-                $response = $showcase->getAttributes();
+                $response = $showcase->toArray();
             });
             Response::json($response);
         } catch(Exception $e) {
