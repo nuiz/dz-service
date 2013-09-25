@@ -19,7 +19,9 @@ class CreateNewsTable extends Migration {
             $table->increments('id');
             $table->string('name');
             $table->string('message');
+            $table->string('media_type');
             $table->integer('picture_id');
+            $table->integer('video_id');
 			$table->timestamps();
 		});
 	}
