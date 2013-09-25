@@ -13,7 +13,7 @@ class NewsController extends BaseController {
         try {
             $user = Auth::getUser();
 
-            $limit = 10;
+            $limit = null;
             if(isset($_GET['limit'])){
                 $limit = $_GET['limit'];
             }
@@ -58,7 +58,10 @@ class NewsController extends BaseController {
             $res = array(
                 'length'=> $paging->getTotal(),
                 'data'=> $data,
-                'paging'=> array()
+                'paging'=> array(
+                    'length'=> $paging->getLastPage(),
+                    'current'=> $paging->getCurrentPage()
+                ),
             );
             if($paging->getCurrentPage() < $paging->getLastPage()){
                 $query_string = http_build_query(array_merge($_GET, array(
