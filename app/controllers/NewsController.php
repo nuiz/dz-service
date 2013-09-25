@@ -85,7 +85,7 @@ class NewsController extends BaseController {
     {
         try {
             $item = News::findOrFail($id)->toArray();
-            $item['picture'] = Picture::findOrFail($item['picture_id']);
+            $item['picture'] = Picture::findOrFail($item['picture_id'])->toArray();
             $item['picture']['link'] = URL::to('picture/'.$item['picture']['picture_link']);
 
             if($this->_isset_field('like')){

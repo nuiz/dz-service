@@ -27,7 +27,7 @@ class ShowcaseController extends BaseController implements ResourceInterface {
             foreach($data as $key => $value){
                 if($this->_isset_field('like')){
                     $data[$key]['like'] = Like::find($value['id'])->toArray();
-                    if(is_null(Auth::getUser())){
+                    if(!is_null(Auth::getUser())){
                         $data[$key]['like']['is_liked'] = UserLike::where('user_id', '=', Auth::getUser()->id)->where('object_id', '=', $value['id'])->count() > 0;
                     }
                 }
@@ -52,7 +52,7 @@ class ShowcaseController extends BaseController implements ResourceInterface {
             $data = $showcase->toArray();
             if($this->_isset_field('like')){
                 $data['like'] = Like::find($id)->toArray();
-                if(is_null(Auth::getUser())){
+                if(!is_null(Auth::getUser())){
                     $data['like']['is_liked'] = UserLike::where('user_id', '=', Auth::getUser()->id)->where('object_id', '=', $id)->count() > 0;
                 }
             }

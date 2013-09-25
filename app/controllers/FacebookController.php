@@ -48,7 +48,14 @@ class FacebookController extends BaseController {
                         $user->last_name = Input::get('last_name');
                         if(Input::has('birth_date'))
                         $user->birth_date = Input::get('birth_date');
+
+                        if(Input::has('phone_number')){
+                            $user->phone_number = Input::get('phone_number');
+                            $user->phone_show = Input::get('phone_show');
+                        }
+
                         $user->email = Input::get('email');
+                        $user->email_show = Input::get('email_show');
                         $user->save();
                     });
                 }
