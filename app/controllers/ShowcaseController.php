@@ -25,6 +25,12 @@ class ShowcaseController extends BaseController implements ResourceInterface {
             $data = $showcases->toArray();
 
             foreach($data as $key => $value){
+                $buffer = json_decode(file_get_contents("http://gdata.youtube.com/feeds/api/videos?q={$value['youtube_id']}&v=2&alt=jsonc"));
+                $youtube_data = null;
+                if($buffer->data->totalItems > 0)
+                    $youtube_data = $buffer->data->items[0];
+
+                $data[$key]['youtube_data'] = $youtube_data;
                 if($this->_isset_field('like')){
                     $data[$key]['like'] = Like::find($value['id'])->toArray();
                     if(!is_null(Auth::getUser())){
@@ -50,6 +56,13 @@ class ShowcaseController extends BaseController implements ResourceInterface {
         try {
             $showcase = Showcase::findOrFail($id);
             $data = $showcase->toArray();
+            $buffer = json_decode(file_get_contents("http://gdata.youtube.com/feeds/api/videos?q={$data['youtube_id']}&v=2&alt=jsonc"));
+            $youtube_data = null;
+            if($buffer->data->totalItems > 0)
+                $youtube_data = $buffer->data->items[0];
+
+            $data['youtube_data'] = $youtube_data;
+
             if($this->_isset_field('like')){
                 $data['like'] = Like::find($id)->toArray();
                 if(!is_null(Auth::getUser())){
@@ -66,6 +79,7 @@ class ShowcaseController extends BaseController implements ResourceInterface {
             return Response::exception($e);
         }
     }
+
     //admin only can store showcase
     public function store(){
         $response = array();

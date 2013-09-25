@@ -17,7 +17,7 @@ class NewsController extends BaseController {
             if(isset($_GET['limit'])){
                 $limit = $_GET['limit'];
             }
-            $paging = News::paginate($limit);
+            $paging = News::orderBy('created_at')->paginate($limit);
             $news = $paging->getCollection();
             $data = $news->toArray();
             $pictures_id = $news->lists('picture_id');
@@ -67,7 +67,7 @@ class NewsController extends BaseController {
                 )));
                 $res['paging']['next'] = sprintf("%s?%s", URL::to("news"), $query_string);
             }
-            if($paging->getCurrentPage() > 0){
+            if($paging->getCurrentPage() > 1){
                 $query_string = http_build_query(array_merge($_GET, array(
                     "page"=> $paging->getCurrentPage()-1,
                     "limit"=> $limit
