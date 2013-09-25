@@ -13,10 +13,15 @@ class NewsController extends BaseController {
         try {
             $user = Auth::getUser();
 
-            $news = News::all();
+            $limit = 10;
+            if(isset($_GET['limit'])){
+                $limit = $_GET['limit'];
+            }
+            $paging = News::paginate($limit);
+            $news = $paging->getCollection();
             $data = $news->toArray();
             $pictures_id = $news->lists('picture_id');
-            $news_id =$news->lists('id');
+            $news_id = $news->lists('id');
 
             if(count($pictures_id)>0){
                 $pictures = Picture::whereIn('id', $pictures_id)->get();
@@ -50,10 +55,26 @@ class NewsController extends BaseController {
                 }
             }
 
-            return Response::json(array(
-                'length'=> $news->count(),
-                'data'=> $data
-            ));
+            $res = array(
+                'length'=> $paging->getTotal(),
+                'data'=> $data,
+                'paging'=> array()
+            );
+            if($paging->getCurrentPage() < $paging->getLastPage()){
+                $query_string = http_build_query(array_merge($_GET, array(
+                    "page"=> $paging->getCurrentPage()+1,
+                    "limit"=> $limit
+                )));
+                $res['paging']['next'] = sprintf("%s?%s", URL::to("news"), $query_string);
+            }
+            if($paging->getCurrentPage() > 0){
+                $query_string = http_build_query(array_merge($_GET, array(
+                    "page"=> $paging->getCurrentPage()-1,
+                    "limit"=> $limit
+                )));
+                $res['paging']['previous'] = sprintf("%s?%s", URL::to("news"), $query_string);
+            }
+            return Response::json($res);
         }
         catch (Exception $e) {
             return Response::exception($e);
