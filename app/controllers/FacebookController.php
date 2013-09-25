@@ -56,6 +56,8 @@ class FacebookController extends BaseController {
 
                         $user->email = Input::get('email');
                         $user->email_show = Input::get('email_show');
+
+                        $user->type = 'normal';
                         $user->save();
                     });
                 }

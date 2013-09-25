@@ -60,20 +60,21 @@ class NewsController extends BaseController {
                 'data'=> $data,
                 'paging'=> array(
                     'length'=> $paging->getLastPage(),
-                    'current'=> $paging->getCurrentPage()
+                    'current'=> $paging->getCurrentPage(),
+                    'limit'=> $paging->getPerPage()
                 ),
             );
             if($paging->getCurrentPage() < $paging->getLastPage()){
                 $query_string = http_build_query(array_merge($_GET, array(
                     "page"=> $paging->getCurrentPage()+1,
-                    "limit"=> $limit
+                    "limit"=> $paging->getPerPage()
                 )));
                 $res['paging']['next'] = sprintf("%s?%s", URL::to("news"), $query_string);
             }
             if($paging->getCurrentPage() > 1){
                 $query_string = http_build_query(array_merge($_GET, array(
                     "page"=> $paging->getCurrentPage()-1,
-                    "limit"=> $limit
+                    "limit"=> $paging->getPerPage()
                 )));
                 $res['paging']['previous'] = sprintf("%s?%s", URL::to("news"), $query_string);
             }
