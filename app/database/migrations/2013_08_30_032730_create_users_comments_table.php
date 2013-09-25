@@ -14,7 +14,9 @@ class CreateUsersCommentsTable extends Migration {
 	{
 		Schema::create('users_comments', function(Blueprint $table)
 		{
-			$table->increments('id');
+            $table->engine ='InnoDB';
+
+            $table->increments('id');
             $table->integer('user_id');
             $table->integer('object_id');
 

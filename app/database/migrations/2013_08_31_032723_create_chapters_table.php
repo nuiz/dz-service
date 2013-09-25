@@ -14,7 +14,9 @@ class CreateChaptersTable extends Migration {
 	{
 		Schema::create('chapters', function(Blueprint $table)
 		{
-			$table->increments('id');
+            $table->engine ='InnoDB';
+
+            $table->increments('id');
             $table->integer('lesson_id');
 
             $table->string('name');

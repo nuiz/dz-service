@@ -14,6 +14,8 @@ class CreateUsersSettingTable extends Migration {
 	{
 		Schema::create('users_setting', function(Blueprint $table)
 		{
+            $table->engine ='InnoDB';
+
             $table->increments('id');
             $table->integer('new_update');
             $table->integer('new_showcase');

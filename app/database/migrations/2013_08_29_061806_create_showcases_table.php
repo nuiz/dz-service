@@ -14,7 +14,9 @@ class CreateShowcasesTable extends Migration {
 	{
 		Schema::create('showcases', function(Blueprint $table)
 		{
-			$table->increments('id');
+            $table->engine ='InnoDB';
+
+            $table->increments('id');
             $table->string('youtube_id');
 			$table->timestamps();
 		});

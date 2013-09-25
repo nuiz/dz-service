@@ -66,7 +66,6 @@ class ShowcaseController extends BaseController implements ResourceInterface {
             return Response::exception($e);
         }
     }
-
     //admin only can store showcase
     public function store(){
         $response = array();

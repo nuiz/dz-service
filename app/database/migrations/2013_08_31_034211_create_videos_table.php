@@ -14,7 +14,9 @@ class CreateVideosTable extends Migration {
 	{
 		Schema::create('videos', function(Blueprint $table)
 		{
-			$table->increments('id');
+            $table->engine ='InnoDB';
+
+            $table->increments('id');
             $table->integer('chapter_id');
 
             $table->string('name');

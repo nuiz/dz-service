@@ -74,7 +74,7 @@ class LessonChapterVideoController extends BaseController {
 
                 $videoFile = Input::file('video');
                 $ext = strtolower($videoFile->getClientOriginalExtension());
-                $allows = array('mp4', '3gp');
+                $allows = array('mp4');
                 if(!in_array($ext, $allows) ) {
                     throw new Exception('file upload not allowed');
                 }
@@ -112,6 +112,7 @@ class LessonChapterVideoController extends BaseController {
                 if(Input::has('name')){
                     $item = Input::get('name');
                 }
+
 
                 if(Input::has('description')){
                     $item->name = Input::get('description');

@@ -119,8 +119,24 @@ class UserController extends BaseController implements ResourceInterface {
                     $user->first_name = Input::get('first_name');
                 }
 
-                if(Input::has('last_name')){
-                    $user->last_name = Input::get('last_name');
+                if(Input::has('phone_number')){
+                    $user->last_name = Input::get('phone_number');
+                }
+
+                if(Input::has('birth_date')){
+                    $user->last_name = Input::get('birth_date');
+                }
+
+                if(Input::has('gender')){
+                    $user->last_name = Input::get('gender');
+                }
+
+                if(Input::has('email_show')){
+                    $user->email_show = Input::get('email_show');
+                }
+
+                if(Input::has('phone_show')){
+                    $user->phone_show = Input::get('phone_show');
                 }
                 $user->save();
 
@@ -207,7 +223,7 @@ class UserController extends BaseController implements ResourceInterface {
                     throw new Exception('email duplicate');
                 }
                 if(User::where('username', '=', Input::get('username'))->count() > 0){
-                    throw new Exception('email duplicate');
+                    throw new Exception('username duplicate');
                 }
 
                 $email = $_POST['email'];
@@ -216,12 +232,17 @@ class UserController extends BaseController implements ResourceInterface {
                 $md5_password = Hash::make($password);
                 $user = new User();
                 $user->email = $email;
+                $user->email_show = $email;
                 $user->password = $md5_password;
                 $user->username = Input::get('username');
                 if(Input::has('gender'))
                     $user->gender = Input::get('gender');
                 if(Input::has('birth_date'))
                     $user->birth_date = 'normal';
+	if(Input::has('phone_number')){
+		$user->phone_number = Input::get('phone_number');
+		$user->phone_show = Input::get('phone_show');
+	}
 
                 $user->type = 'normal';
                 $user->save();

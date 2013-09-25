@@ -16,6 +16,7 @@ class UserTableSeeder extends Seeder
         User::create(array(
             'type'=> 'admin',
             'email'=> 'admin@dancezone.com',
+            'username'=> 'admin',
             'first_name'=> 'admin',
             'password'=> Hash::make('123456'),
         ));

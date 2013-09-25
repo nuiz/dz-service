@@ -14,7 +14,9 @@ class CreatePicturesTable extends Migration {
 	{
 		Schema::create('pictures', function(Blueprint $table)
 		{
-			$table->increments('id');
+            $table->engine ='InnoDB';
+
+            $table->increments('id');
             $table->string('picture_link');
             $table->integer('size_x');
             $table->integer('size_y');

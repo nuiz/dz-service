@@ -14,7 +14,9 @@ class CreateDzObjectsTable extends Migration {
 	{
 		Schema::create('dz_objects', function(Blueprint $table)
 		{
-			$table->increments('id');
+            $table->engine ='InnoDB';
+
+            $table->increments('id');
             $table->string('type');
 		});
 	}

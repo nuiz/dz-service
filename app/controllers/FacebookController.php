@@ -28,18 +28,26 @@ class FacebookController extends BaseController {
                     DB::transaction(function() use(&$user){
                         $validator = Validator::make(Input::all(), array(
                             'facebook_id'=> array('required'),
-                            'email'=> array('required'),
-                            'first_name'=> array('required'),
-                            'last_name'=> array('required')
+                            'email'=> array('required')
                         ));
 
                         if($validator->fails()){
                             throw new Exception($validator->errors()->first());
                         }
-                        $user = new User();
+                        $buffer = User::where('email', '=', Input::get('email'))->get();
+                        if($buffer->count() == 0)
+                            $user = new User();
+                        else
+                            $user = $buffer->first();
+
                         $user->facebook_id = Input::get('facebook_id');
+                        $user->username = Input::get('username');
+                        if(Input::has('first_name'))
                         $user->first_name = Input::get('first_name');
+                        if(Input::has('last_name'))
                         $user->last_name = Input::get('last_name');
+                        if(Input::has('birth_date'))
+                        $user->birth_date = Input::get('birth_date');
                         $user->email = Input::get('email');
                         $user->save();
                     });

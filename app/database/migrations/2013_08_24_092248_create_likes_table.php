@@ -14,7 +14,9 @@ class CreateLikesTable extends Migration {
 	{
 		Schema::create('likes', function(Blueprint $table)
 		{
-			$table->integer('id');
+            $table->engine ='InnoDB';
+
+            $table->integer('id');
             $table->integer('length');
 			$table->timestamps();
 		});

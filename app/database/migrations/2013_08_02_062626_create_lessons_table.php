@@ -14,7 +14,9 @@ class CreateLessonsTable extends Migration {
 	{
 		Schema::create('lessons', function(Blueprint $table)
 		{
-			$table->increments('id');
+            $table->engine ='InnoDB';
+
+            $table->increments('id');
             $table->string('color');
             $table->string('name');
             $table->integer('chapter_length');

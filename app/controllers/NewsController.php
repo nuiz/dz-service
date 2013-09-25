@@ -136,7 +136,7 @@ class NewsController extends BaseController {
                 $item = News::findOrFail($id);
 
                 if(Input::has('name')){
-                    $item->name = Input::get('name');
+                    $item = Input::get('name');
                 }
 
                 if(Input::has('message')){
