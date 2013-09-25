@@ -197,12 +197,16 @@ class UserController extends BaseController implements ResourceInterface {
             DB::transaction(function() use (&$data){
                 $validator = Validator::make(Input::all(), array(
                     'email'=> array('email', 'required'),
-                    'password'=> array('min: 4', 'max: 16', 'required'),
+                    'username'=> array('min: 4', 'max: 16', 'required'),
+                    'password'=> array('min: 4', 'max: 16', 'required')
                 ));
                 if ($validator->fails())
                     throw new Exception($validator->errors());
 
                 if(User::where('email', '=', Input::get('email'))->count() > 0){
+                    throw new Exception('email duplicate');
+                }
+                if(User::where('username', '=', Input::get('username'))->count() > 0){
                     throw new Exception('email duplicate');
                 }
 
@@ -213,6 +217,12 @@ class UserController extends BaseController implements ResourceInterface {
                 $user = new User();
                 $user->email = $email;
                 $user->password = $md5_password;
+                $user->username = Input::get('username');
+                if(Input::has('gender'))
+                    $user->gender = Input::get('gender');
+                if(Input::has('birth_date'))
+                    $user->birth_date = 'normal';
+
                 $user->type = 'normal';
                 $user->save();
                 

@@ -63,7 +63,7 @@ class NewsController extends BaseController {
     public function show($id)
     {
         try {
-            $item = Activity::findOrFail($id)->toArray();
+            $item = News::findOrFail($id)->toArray();
             $item['picture'] = Picture::findOrFail($item['picture_id']);
             $item['picture']['link'] = URL::to('picture/'.$item['picture']['picture_link']);
 
@@ -136,7 +136,7 @@ class NewsController extends BaseController {
                 $item = News::findOrFail($id);
 
                 if(Input::has('name')){
-                    $item = Input::get('name');
+                    $item->name = Input::get('name');
                 }
 
                 if(Input::has('message')){

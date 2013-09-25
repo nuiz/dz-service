@@ -75,11 +75,11 @@ class ClassesController extends BaseController {
                 $item = Classes::findOrFail($id);
 
                 if(Input::has('name')){
-                    $item = Input::get('name');
+                    $item->name = Input::get('name');
                 }
 
                 if(Input::has('description')){
-                    $item->name = Input::get('description');
+                    $item->description = Input::get('description');
                 }
 
                 $item->save();

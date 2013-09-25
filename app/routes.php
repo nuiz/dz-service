@@ -33,7 +33,22 @@ App::error(function(AuthTokenNotAuthorizedException $exception) {
 Route::resource('test', 'TestController');
 
 Route::get('auth', 'AuthTokenController@index');
-Route::post('auth', 'AuthTokenController@store');
+//Route::post('auth', 'AuthTokenController@store');
+Route::post('auth', function(){
+    $user = User::where('username', '=', Input::get('username'))->get();
+    $token = AuthToken::attempt(array('username'=> input::get('username'), 'password'=> Input::get('password')));
+
+    if(!$token)
+        $token = AuthToken::attempt(array('email'=> input::get('username'), 'password'=> Input::get('password')));
+
+    if(!$token)
+        throw new \Tappleby\AuthToken\Exceptions\NotAuthorizedException();
+
+    $serializedToken = AuthToken::publicToken($token);
+    $user = AuthToken::user($token);
+
+    return Response::json(array('token' => $serializedToken, 'user' => $user->toArray()));
+});
 Route::delete('auth', 'AuthTokenController@destroy');
 
 Route::post('/register', 'UserController@postRegister');

@@ -22,10 +22,23 @@ class ShowcaseController extends BaseController implements ResourceInterface {
     {
         try {
             $showcases = Showcase::all();
+            $data = $showcases->toArray();
+
+            foreach($data as $key => $value){
+                if($this->_isset_field('like')){
+                    $data[$key]['like'] = Like::find($value['id'])->toArray();
+                    if(is_null(Auth::getUser())){
+                        $data[$key]['like']['is_liked'] = UserLike::where('user_id', '=', Auth::getUser()->id)->where('object_id', '=', $value['id'])->count() > 0;
+                    }
+                }
+                if($this->_isset_field('comment')){
+                    $data[$key]['comment'] = Comment::find($value['id'])->toArray();
+                }
+            }
 
             return Response::json(array(
-                'length'=> $showcases->count(),
-                'data'=> $showcases->toArray()
+                'length'=> count($data),
+                'data'=> $data
             ));
         }
         catch (Exception $e) {
@@ -36,7 +49,18 @@ class ShowcaseController extends BaseController implements ResourceInterface {
     public function show($id){
         try {
             $showcase = Showcase::findOrFail($id);
-            return Response::json($showcase);
+            $data = $showcase->toArray();
+            if($this->_isset_field('like')){
+                $data['like'] = Like::find($id)->toArray();
+                if(is_null(Auth::getUser())){
+                    $data['like']['is_liked'] = UserLike::where('user_id', '=', Auth::getUser()->id)->where('object_id', '=', $id)->count() > 0;
+                }
+            }
+            if($this->_isset_field('comment')){
+                $data['comment'] = Comment::find($id)->toArray();
+            }
+
+            return Response::json($data);
         }
         catch (Exception $e){
             return Response::exception($e);
