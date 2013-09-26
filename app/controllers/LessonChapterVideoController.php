@@ -64,9 +64,11 @@ class LessonChapterVideoController extends BaseController {
         try {
             $res = array();
             DB::transaction(function() use (&$res, $lesson_id, $chapter_id){
+                $chapter = Chapter::findOrFail($chapter_id);
                 $validator = Validator::make(Input::all(), array(
                     'name'=> array('required'),
-                    'description'=> array('required')
+                    'description'=> array('required'),
+                    'logo'=> array('required')
                 ));
                 if($validator->fails()){
                     throw new Exception($validator->errors()->first());
@@ -91,6 +93,9 @@ class LessonChapterVideoController extends BaseController {
 
                 $video->video_link = $name;
                 $video->save();
+
+                $chapter->video_length = Video::where("chapter_id", "=", $chapter_id)->count();
+                $chapter->save();
 
                 $res = $video->toArray();
             });

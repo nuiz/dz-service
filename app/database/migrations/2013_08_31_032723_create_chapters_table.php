@@ -19,9 +19,10 @@ class CreateChaptersTable extends Migration {
             $table->increments('id');
             $table->integer('lesson_id');
 
+            $table->integer('picture_id');
+
             $table->string('name');
             $table->string('description');
-            $table->string('cover_link');
             $table->integer('video_length');
 			$table->timestamps();
 

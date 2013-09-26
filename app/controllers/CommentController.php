@@ -34,8 +34,26 @@ class CommentController extends BaseController implements ResourceInterface {
                     $comments->save();
                 }
                 $users_comments = UserComment::where('object_id', '=', $object_id)->get();
+                $users_id = $users_comments->lists('user_id');
+                if(count($users_id)>0){
+                    $users = User::whereIn('id', $users_id)->get();
+                }
+
                 $res = $comments->toArray();
-                $res['data'] = $users_comments->toArray();
+                $data = $users_comments->toArray();
+                if(count($users_id)>0){
+                    foreach($data as $key => $value){
+                        if($users->count() > 0){
+                            $users_filter = $users->filter(function($item) use($value){
+                                if($item->id==$value['user_id']){
+                                    return true;
+                                }
+                            });
+                            $data[$key]['from'] = $users_filter->first()->toArray();
+                        }
+                    }
+                }
+                $res['data'] = $data;
             });
 
             return Response::json($res);

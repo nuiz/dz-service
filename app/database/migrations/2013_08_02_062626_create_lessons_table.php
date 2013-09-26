@@ -18,6 +18,7 @@ class CreateLessonsTable extends Migration {
 
             $table->increments('id');
             $table->string('color');
+            $table->string('logo');
             $table->string('name');
             $table->integer('chapter_length');
 			$table->timestamps();

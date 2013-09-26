@@ -58,6 +58,11 @@ class NewsController extends BaseController {
                         $data[$key]['video'] = $buffer2;
                     }
                 }
+                if($value['media_type']=='none'){
+                    $data[$key]['picture'] = array(
+                        'link'=> URL::to('picture/default.jpg')
+                    );
+                }
                 if($this->_isset_field('like')){
                     $data[$key]['like'] = $likes->filter(function($item) use ($value){
                         return $item->id == $value['id'];
@@ -114,6 +119,11 @@ class NewsController extends BaseController {
             if(!is_null($video)){
                 $item['video'] = $video->toArray();
                 $item['video']['link'] = URL::to('news_video/'.$item['video']['video_link']);
+            }
+            if($item['media_type']=='none'){
+                $item['picture'] = array(
+                    'link'=> URL::to('picture/default.jpg')
+                );
             }
 
             if($this->_isset_field('like')){
