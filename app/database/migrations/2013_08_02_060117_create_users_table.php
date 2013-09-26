@@ -36,7 +36,7 @@ class CreateUsersTable extends Migration {
 
             $table->unique('email');
             $table->unique('username');
-            $table->unique('facebook_id')->nullable();
+            $table->unique('facebook_id');
 		});
 	}
 

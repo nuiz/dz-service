@@ -39,7 +39,7 @@ class LessonChapterVideoController extends BaseController {
     public function show($lesson_id, $chapter_id, $id)
     {
         try {
-            $item = Activity::findOrFail($id);
+            $item = Video::findOrFail($id);
             $data = $item->toArray();
             $data['link'] = URL::to('video/'.$data['video_link']);
 
@@ -68,7 +68,7 @@ class LessonChapterVideoController extends BaseController {
                 $validator = Validator::make(Input::all(), array(
                     'name'=> array('required'),
                     'description'=> array('required'),
-                    'logo'=> array('required')
+                    'video'=> array('required')
                 ));
                 if($validator->fails()){
                     throw new Exception($validator->errors()->first());
@@ -93,6 +93,12 @@ class LessonChapterVideoController extends BaseController {
 
                 $video->video_link = $name;
                 $video->save();
+
+                /*
+                $thumb = realpath("vieo/thumb_{$video->id}.jpg");
+                $videoPath = realpath("video/{$name}");
+                shell_exec("ffmpeg -i $videoPath -deinterlace -an -ss 1 -t 00:00:01 -r 1 -y -vcodec mjpeg -f mjpeg $thumb 2>&1");
+                */
 
                 $chapter->video_length = Video::where("chapter_id", "=", $chapter_id)->count();
                 $chapter->save();

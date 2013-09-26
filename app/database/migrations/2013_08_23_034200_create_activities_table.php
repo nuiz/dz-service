@@ -17,7 +17,7 @@ class CreateActivitiesTable extends Migration {
             $table->engine ='InnoDB';
 
             $table->increments('id');
-            $table->integer('picture_id');
+            $table->integer('user_length');
 
             $table->string('name');
             $table->string('message');
