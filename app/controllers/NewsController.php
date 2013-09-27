@@ -17,7 +17,7 @@ class NewsController extends BaseController {
             if(isset($_GET['limit'])){
                 $limit = $_GET['limit'];
             }
-            $paging = News::orderBy('created_at')->paginate($limit);
+            $paging = News::orderBy('created_at', 'desc')->paginate($limit);
             $news = $paging->getCollection();
             $data = $news->toArray();
             $pictures_id = $news->lists('picture_id');
@@ -68,7 +68,7 @@ class NewsController extends BaseController {
                         return $item->id == $value['id'];
                     })->first()->toArray();
                     if(!is_null($user)){
-                        $data[$key]['like']['is_liked'] = UserLike::where('user_id', '=', $user->id)->where('object_id', '=', $value['id']);
+                        $data[$key]['like']['is_liked'] = UserLike::where('user_id', '=', $user->id)->where('object_id', '=', $value['id'])->count() > 0;
                     }
                 }
                 if($this->_isset_field('comment')){
@@ -129,7 +129,7 @@ class NewsController extends BaseController {
             if($this->_isset_field('like')){
                 $item['like'] = Like::find($id)->toArray();
                 if(!is_null(Auth::getUser())){
-                    $item['like']['is_liked'] = UserLike::where('user_id', '=', Auth::getUser()->id)->where('object_id', '=', $item['id']);
+                    $item['like']['is_liked'] = UserLike::where('user_id', '=', Auth::getUser()->id)->where('object_id', '=', $item['id'])->count() > 0;
                 }
             }
 

@@ -39,7 +39,7 @@ class LessonChapterVideoController extends BaseController {
     public function show($lesson_id, $chapter_id, $id)
     {
         try {
-            $item = Activity::findOrFail($id);
+            $item = Video::findOrFail($id);
             $data = $item->toArray();
             $data['link'] = URL::to('video/'.$data['video_link']);
 
@@ -68,7 +68,7 @@ class LessonChapterVideoController extends BaseController {
                 $validator = Validator::make(Input::all(), array(
                     'name'=> array('required'),
                     'description'=> array('required'),
-                    'logo'=> array('required')
+                    'video'=> array('required')
                 ));
                 if($validator->fails()){
                     throw new Exception($validator->errors()->first());

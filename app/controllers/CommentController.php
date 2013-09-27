@@ -24,21 +24,19 @@ class CommentController extends BaseController implements ResourceInterface {
             $res = array();
             DB::transaction(function() use(&$res, $object_id, &$response){
                 $dz_object = DzObject::findOrFail($object_id);
-                try {
-                    $comments = Comment::findOrFail($object_id);
+                $comments = Comment::findOrFail($object_id);
+
+                $limit = null;
+                if(isset($_GET['limit'])){
+                    $limit = $_GET['limit'];
                 }
-                catch (Exception $e) {
-                    $comments = new Comment();
-                    $comments->id = $object_id;
-                    $comments->length = UserComment::where('object_id', '=', $object_id)->count();
-                    $comments->save();
-                }
-                $users_comments = UserComment::where('object_id', '=', $object_id)->get();
+
+                $paging = UserComment::where('object_id', '=', $object_id)->orderBy("created_at", "desc")->paginate($limit);
+                $users_comments = $paging->getCollection();
                 $users_id = $users_comments->lists('user_id');
                 if(count($users_id)>0){
                     $users = User::whereIn('id', $users_id)->get();
                 }
-
                 $res = $comments->toArray();
                 $data = $users_comments->toArray();
                 if(count($users_id)>0){
@@ -53,7 +51,30 @@ class CommentController extends BaseController implements ResourceInterface {
                         }
                     }
                 }
-                $res['data'] = $data;
+
+                $res = array(
+                    'length'=> $paging->getTotal(),
+                    'data'=> $data,
+                    'paging'=> array(
+                        'length'=> $paging->getLastPage(),
+                        'current'=> $paging->getCurrentPage(),
+                        'limit'=> $paging->getPerPage()
+                    ),
+                );
+                if($paging->getCurrentPage() < $paging->getLastPage()){
+                    $query_string = http_build_query(array_merge($_GET, array(
+                        "page"=> $paging->getCurrentPage()+1,
+                        "limit"=> $paging->getPerPage()
+                    )));
+                    $res['paging']['next'] = sprintf("%s?%s", URL::to("dz_object/{$object_id}/comment"), $query_string);
+                }
+                if($paging->getCurrentPage() > 1){
+                    $query_string = http_build_query(array_merge($_GET, array(
+                        "page"=> $paging->getCurrentPage()-1,
+                        "limit"=> $paging->getPerPage()
+                    )));
+                    $res['paging']['previous'] = sprintf("%s?%s", URL::to("dz_object/{$object_id}/comment"), $query_string);
+                }
             });
 
             return Response::json($res);

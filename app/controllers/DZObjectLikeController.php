@@ -52,9 +52,9 @@ class DZObjectLikeController extends BaseController {
                 if(!$user){
                     throw new Exception('this action require authenticate');
                 }
-                $c = UserLike::where('user_id', '=', $user->id)->where('object_id', '=', $object_id)->count();
+                echo $c = UserLike::where('user_id', '=', $user->id)->where('object_id', '=', $object_id)->count();
+                $likeObject = $this->getLikeObject($object_id);
                 if($c == 0){
-                    $likeObject = $this->getLikeObject($object_id);
                     $userLike = new UserLike();
                     $userLike->user_id = $user->id;
                     $userLike->object_id = $object_id;
@@ -62,9 +62,8 @@ class DZObjectLikeController extends BaseController {
 
                     $likeObject->length = UserLike::where('object_id', '=', $object_id)->count();
                     $likeObject->save();
-
-                    $res = $likeObject->toArray();
                 }
+                $res = $likeObject->toArray();
             });
             return Response::json($res);
         }
