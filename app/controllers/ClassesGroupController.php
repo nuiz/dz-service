@@ -22,29 +22,35 @@ class ClassesGroupController extends BaseController {
     public function index($class_id)
     {
         $groups = Group::where('class_id', '=', $class_id)->get();
-        $groupsData = $groups->toArray();
+        $data = array();
+        if($groups->count() > 0){
+            $data = $groups->toArray();
+        }
 
-        foreach($groupsData as $key => $groupData){
-            $users_groups = UserGroup::where('group_id', '=', $groupData['id'])->get();
-            if($users_groups->count() > 0){
-                $users_id = $users_groups->lists('id');
-                $users = User::whereIn('id', $users_id)->get();
-
-                $usersData = $users->toArray();
+        $pictures_id = $groups->lists('picture_id');
+        if(count($pictures_id) > 0){
+            $pictures = Picture::whereIn('id', $pictures_id)->get();
+        }
+        foreach($data as $key => $value){
+            $picture = array('link'=> URL::to("picture/default.jpg"));
+            if($pictures_id>0){
+                $buffer = $pictures->filter(function($item) use ($value){
+                    if($value['picture_id']==$item->id){
+                        return true;
+                    }
+                });
+                if($buffer->count()>0){
+                    $buffer2 = $buffer->first()->toArray();
+                    $buffer2['link'] = URL::to('picture/'.$buffer2['picture_link']);
+                    $picture = $buffer2;
+                }
             }
-            else {
-                $usersData = array();
-            }
-
-            $groupsData[$key]['users'] = array(
-                'length'=> count($usersData),
-                'data'=> $usersData
-            );
+            $data[$key]['picture'] = $picture;
         }
 
         return Response::json(array(
             'length'=> $groups->count(),
-            'data'=> $groupsData
+            'data'=> $data
         ));
     }
 
@@ -61,7 +67,14 @@ class ClassesGroupController extends BaseController {
                 $response['users']['length'] = count($response['users']['data']);
             }
 
-            return Response::json($response);
+            $data = $group->toArray();
+            $picture = Picture::find($data['picture_id']);
+            if(is_null($picture))
+                $data['picture'] = array('link'=> URL::to("picture/default.jpg"));
+            else
+                $data['picture'] = $picture->toArray();
+
+            return Response::json($data);
         }
         catch (Exception $e) {
             return Response::exception($e);
@@ -84,6 +97,31 @@ class ClassesGroupController extends BaseController {
                 $group->name = Input::get('name');
                 $group->description = Input::get('description');
                 $group->class_id = $class_id;
+
+                if(Input::hasFile('picture')){
+                    $picFile = Input::file('picture');
+                    $ext = strtolower($picFile->getClientOriginalExtension());
+                    $pic_allows = array('jpg', 'jpeg', 'png');
+
+                    if(!in_array($ext, $pic_allows)){
+                        throw new Exception("Picture upload allow jpg,jpeg,png only");
+                    }
+
+                    $picture = new Picture();
+                    list($width, $height, $type, $attr) = getimagesize($picFile->getRealPath());
+                    $picture->size_x = $width;
+                    $picture->size_y = $height;
+                    $picture->save();
+
+                    $name = $picture->id.'.'.$ext;
+                    $picFile->move('picture', $name);
+                    chmod('picture/'.$name, 0777);
+
+                    $picture->picture_link = $name;
+                    $picture->save();
+
+                    $group->picture_id = $picture->id;
+                }
 
                 $group->save();
                 $response = $group->toArray();

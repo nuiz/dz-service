@@ -2,43 +2,45 @@
 /**
  * Created by JetBrains PhpStorm.
  * User: P2DC
- * Date: 2/9/2556
- * Time: 13:20 น.
+ * Date: 21/9/2556
+ * Time: 16:40 น.
  * To change this template use File | Settings | File Templates.
  */
 
-class LikeController extends BaseController implements ResourceInterface {
-    public function _rules()
-    {
-        return array();
-    }
-
+class LikeController extends BaseController {
     public function index($object_id)
     {
         try {
-            $response = array();
-            DB::transaction(function() use($object_id, &$response){
-                $dz_object = DzObject::findOrFail($object_id);
+            $res = array();
+            DB::transaction(function() use(&$res, $object_id){
+                $object = DzObject::findOrFail($object_id);
+                $objectLike = $this->getLikeObject($object_id);
+                $users_likes = UserLike::where('object_id', '=', $object_id);
 
-                $likes = Like::findOrFail($object_id);
-
-                if (is_null($likes)) {
-                    $likes = new Like();
-                    $likes->id = $object_id;
-                    $likes->length = Like::where('object_id', '=', $object_id)->count();
-                    $likes->save();
+                $data = array();
+                if($users_likes->count()>0){
+                    $users = User::whereIn('id', $users_likes->lists('user_id'))->get();
+                    $data = $users->toArray();
                 }
-                $users_likes = UserLike::where('object_id', '=', $object_id)->get();
-                $response = $likes->attributesToArray();
-                $response['data'] = $users_likes->toArray();
+                $res = array(
+                    'length'=> count($data),
+                    'data'=> $data,
+                );
 
-                $user = Auth::getUser();
-                if(!is_null($user))
-                    $response['is_like'] = Like::where('object_id', '=', $object_id)->where('user_id', '=', $user->id)->count() > 0;
+                if(Auth::getUser()){
+                    $c = UserLike::where('user_id', '=', Auth::getUser()->id)->where('object_id', '=', $object_id)->count();
+                    if($c > 0){
+                        $res['is_liked'] = true;
+                    }
+                    else {
+                        $res['is_liked'] = false;
+                    }
+                }
             });
-
-            return Response::json($response);
-        } catch (Exception $e) {
+            return Response::json($res);
+        }
+        catch (Exception $e) {
+            DB::rollBack();
             return Response::exception($e);
         }
     }
@@ -46,30 +48,34 @@ class LikeController extends BaseController implements ResourceInterface {
     public function store($object_id)
     {
         try {
-            $response = null;
-            DB::transaction(function() use ($object_id, &$response){
+            $res = array();
+            DB::transaction(function() use(&$res, $object_id){
                 $user = Auth::getUser();
-                if(is_null($user)){
-                    throw new Exception('this action is required authenticate');
+                $object = DzObject::findOrFail($object_id);
+                if(!$user){
+                    throw new Exception('this action require authenticate');
                 }
+                $c = UserLike::where('user_id', '=', $user->id)->where('object_id', '=', $object_id)->count();
+                $likeObject = $this->getLikeObject($object_id);
+                if($c == 0){
+                    $userLike = new UserLike();
+                    $userLike->user_id = $user->id;
+                    $userLike->object_id = $object_id;
+                    $userLike->save();
 
-                $user_like = new UserLike();
-                $user_like->object_id = $object_id;
-
-                $likes = Like::findOrFail($object_id);
-                if(is_null($likes)){
-                    $likes = new UserLike();
-                    $likes->id = $object_id;
-                    $likes->save();
+                    $likeObject->length = UserLike::where('object_id', '=', $object_id)->count();
+                    $likeObject->save();
                 }
-                $user_like->save();
-
-                $likes->length = UserLike::where('object_id', '=', $object_id)->count();
-                $likes->save();
-
-                $response = $likes->toArray();
+                $res = $likeObject->toArray();
+                $c = UserLike::where('user_id', '=', $user->id)->where('object_id', '=', $object_id)->count();
+                if($c > 0){
+                    $res['is_liked'] = true;
+                }
+                else {
+                    $res['is_liked'] = false;
+                }
             });
-            return Response::json($response);
+            return Response::json($res);
         }
         catch (Exception $e) {
             DB::rollBack();
@@ -77,29 +83,50 @@ class LikeController extends BaseController implements ResourceInterface {
         }
     }
 
-    public function delete($object_id, $user_id)
+    public function delete($object_id)
     {
         try {
             $res = array();
             DB::transaction(function() use(&$res, $object_id){
                 $user = Auth::getUser();
-                if(is_null($user)){
-                    throw new Exception('this action is required authenticate');
+                $object = DzObject::findOrFail($object_id);
+                if(!$user){
+                    throw new Exception('this action require authenticate');
                 }
+                $user_like = UserLike::where('user_id', '=', $user->id)->where('object_id', '=', $object_id)->get();
+                $likeObject = $this->getLikeObject($object_id);
+                if($user_like->count() > 0){
+                    $userLike = $user_like->first();
+                    $userLike->delete();
 
-                $like = Like::findOrFail($object_id);
-
-                UserLike::where('object_id', '=', $object_id)->where('user_id', '=', $user->id)->delete();
-
-                $like->length = UserLike::where('object_id', '=', $object_id)->count();
-                $like->save();
-
-                $res = $like->toArray();
+                    $likeObject->length = UserLike::where('object_id', '=', $object_id)->count();
+                    $likeObject->save();
+	}
+                $res = $likeObject->toArray();
+                $c = UserLike::where('user_id', '=', $user->id)->where('object_id', '=', $object_id)->count();
+                if($c > 0){
+                    $res['is_liked'] = true;
+                }
+                else {
+                    $res['is_liked'] = false;
+                }
             });
+            return Response::json($res);
         }
         catch (Exception $e) {
             DB::rollBack();
             return Response::exception($e);
         }
+    }
+
+    protected function getLikeObject($object_id)
+    {
+        $likeObject = Like::find($object_id);
+        if($likeObject==null){
+            $likeObject = new Like();
+            $likeObject->id = $object_id;
+            $likeObject->save();
+        }
+        return $likeObject;
     }
 }

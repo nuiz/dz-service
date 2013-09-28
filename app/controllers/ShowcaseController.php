@@ -21,9 +21,10 @@ class ShowcaseController extends BaseController implements ResourceInterface {
     public function index()
     {
         try {
-            $showcases = Showcase::all();
+            $showcases = Showcase::orderBy('created_at', 'desc')->get();
             $data = $showcases->toArray();
 
+            /*
             foreach($data as $key => $value){
                 $buffer = json_decode(file_get_contents("http://gdata.youtube.com/feeds/api/videos?q={$value['youtube_id']}&v=2&alt=jsonc"));
                 $youtube_data = null;
@@ -41,6 +42,7 @@ class ShowcaseController extends BaseController implements ResourceInterface {
                     $data[$key]['comment'] = Comment::find($value['id'])->toArray();
                 }
             }
+            */
 
             return Response::json(array(
                 'length'=> count($data),
@@ -56,6 +58,7 @@ class ShowcaseController extends BaseController implements ResourceInterface {
         try {
             $showcase = Showcase::findOrFail($id);
             $data = $showcase->toArray();
+            /*
             $buffer = json_decode(file_get_contents("http://gdata.youtube.com/feeds/api/videos?q={$data['youtube_id']}&v=2&alt=jsonc"));
             $youtube_data = null;
             if($buffer->data->totalItems > 0)
@@ -72,6 +75,7 @@ class ShowcaseController extends BaseController implements ResourceInterface {
             if($this->_isset_field('comment')){
                 $data['comment'] = Comment::find($id)->toArray();
             }
+            */
 
             return Response::json($data);
         }
@@ -93,8 +97,25 @@ class ShowcaseController extends BaseController implements ResourceInterface {
             DB::transaction(function() use (&$response){
                 $showcase = new Showcase();
                 $showcase->youtube_id = Input::get('youtube_id');
-                $showcase->save();
 
+                $buffer = json_decode(file_get_contents("http://gdata.youtube.com/feeds/api/videos?q=".Input::get('youtube_id')."&v=2&alt=jsonc"));
+                $youtube_data = null;
+                if($buffer->data->totalItems > 0)
+                    $youtube_data = $buffer->data->items[0];
+
+                if(is_null($youtube_data) || empty($youtube_data)){
+                    throw new Exception("youtube api is not found youtube id ".Input::get('youtube_id'));
+                }
+
+                $showcase->name = $youtube_data->title;
+                $showcase->description = $youtube_data->description;
+                $showcase->thumb = $youtube_data->thumbnail->sqDefault;
+                $showcase->duration = $youtube_data->duration;
+                $showcase->like_count = $youtube_data->likeCount;
+                $showcase->view_count = $youtube_data->viewCount;
+                $showcase->comment_count = $youtube_data->commentCount;
+
+                $showcase->save();
                 $response = $showcase->getAttributes();
             });
             Response::json($response);

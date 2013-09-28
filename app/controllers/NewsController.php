@@ -17,7 +17,7 @@ class NewsController extends BaseController {
             if(isset($_GET['limit'])){
                 $limit = $_GET['limit'];
             }
-            $paging = News::orderBy('created_at')->paginate($limit);
+            $paging = News::orderBy('created_at', 'desc')->paginate($limit);
             $news = $paging->getCollection();
             $data = $news->toArray();
             $pictures_id = $news->lists('picture_id');
@@ -55,6 +55,7 @@ class NewsController extends BaseController {
                     if($buffer->count()>0){
                         $buffer2 = $buffer->first()->toArray();
                         $buffer2['link'] = URL::to('news_video/'.$buffer2['video_link']);
+                        $buffer2['thumb'] = URL::to('news_video/'.$buffer2['id'].'.jpeg');
                         $data[$key]['video'] = $buffer2;
                     }
                 }
@@ -68,7 +69,7 @@ class NewsController extends BaseController {
                         return $item->id == $value['id'];
                     })->first()->toArray();
                     if(!is_null($user)){
-                        $data[$key]['like']['is_liked'] = UserLike::where('user_id', '=', $user->id)->where('object_id', '=', $value['id']);
+                        $data[$key]['like']['is_liked'] = UserLike::where('user_id', '=', $user->id)->where('object_id', '=', $value['id'])->count() > 0;
                     }
                 }
                 if($this->_isset_field('comment')){
@@ -119,6 +120,7 @@ class NewsController extends BaseController {
             if(!is_null($video)){
                 $item['video'] = $video->toArray();
                 $item['video']['link'] = URL::to('news_video/'.$item['video']['video_link']);
+                $item['video']['thumb'] = URL::to('news_video/'.$item['video']['id'].'.jpeg');
             }
             if($item['media_type']=='none'){
                 $item['picture'] = array(
@@ -129,7 +131,7 @@ class NewsController extends BaseController {
             if($this->_isset_field('like')){
                 $item['like'] = Like::find($id)->toArray();
                 if(!is_null(Auth::getUser())){
-                    $item['like']['is_liked'] = UserLike::where('user_id', '=', Auth::getUser()->id)->where('object_id', '=', $item['id']);
+                    $item['like']['is_liked'] = UserLike::where('user_id', '=', Auth::getUser()->id)->where('object_id', '=', $item['id'])->count() > 0;
                 }
             }
 
@@ -193,6 +195,13 @@ class NewsController extends BaseController {
                         $name = $news_video->id.'.'.$ext;
                         $media->move('news_video', $name);
                         chmod('news_video/'.$name, 0777);
+
+                        $video_path = 'news_video/'.$name;
+                        $thumbnail_path = 'news_video/'.$news_video->id.'.jpeg';
+
+                        // shell command [highly simplified, please don't run it plain on your script!]
+                        shell_exec("ffmpeg -i {$video_path} -deinterlace -an -ss 1 -t 00:00:01 -r 1 -y -vcodec mjpeg -f mjpeg {$thumbnail_path} 2>&1");
+                        chmod($thumbnail_path, 0777);
 
                         $news_video->video_link = $name;
                         $news_video->save();

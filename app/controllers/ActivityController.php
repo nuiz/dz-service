@@ -10,11 +10,13 @@
 class ActivityController extends BaseController {
     public function index()
     {
+        $user = Auth::getUser();
+
         if(isset($_GET['year']) && isset($_GET['month'])){
-            $collection = Activity::where(DB::raw("YEAR(start_time)"), "=", $_GET['year'])->where(DB::raw("MONTH(start_time)"), "=", $_GET['month'])->get();
+            $collection = Activity::where(DB::raw("YEAR(start_time)"), "=", $_GET['year'])->where(DB::raw("MONTH(start_time)"), "=", $_GET['month'])->orderBy('created_at', 'desc')->get();
         }
         else {
-            $collection = Activity::all();
+            $collection = Activity::orderBy('created_at', 'desc')->get();
         }
 
         $items = $collection->toArray();
@@ -38,13 +40,18 @@ class ActivityController extends BaseController {
                 }
             }
             $items[$key]['picture'] = $picture;
+            $items[$key]['start_time_2'] = date("H:i A", strtotime($value['start_time']));
 
+            if(!is_null($user)){
+                $items[$key]['is_joined'] = UserActivity::where("user_id", "=", $user->id)->where("activity_id", "=", $value["id"])->count() > 0;
+            }
             if($this->_isset_field('like')){
                 $items[$key]['like'] = Like::find($value['id'])->toArray();
                 if(!is_null(Auth::getUser())){
                     $items[$key]['like']['is_liked'] = UserLike::where('user_id', '=', Auth::getUser()->id)->where('object_id', '=', $value['id'])->count() > 0;
                 }
             }
+
         }
 
         return Response::json(array(
@@ -56,6 +63,7 @@ class ActivityController extends BaseController {
     public function show($id)
     {
         try {
+            $user = Auth::getUser();
             $item = Activity::findOrFail($id)->toArray();
             if($this->_isset_field('like')){
                 $items['like'] = Like::find($id)->toArray();
@@ -69,6 +77,10 @@ class ActivityController extends BaseController {
             else
                 $item['picture'] = $picture->toArray();
 
+            if(!is_null($user)){
+                $item['is_joined'] = UserActivity::where("user_id", "=", $user->id)->where("activity_id", "=", $item["id"])->count() > 0;
+            }
+            $item['start_time_2'] = date("H:i A", strtotime($item['start_time']));
             return Response::json($item);
         }
         catch (Exception $e) {
