@@ -3,7 +3,7 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateUsersActivitiesTable extends Migration {
+class CreateRegistersGroupsTable extends Migration {
 
 	/**
 	 * Run the migrations.
@@ -12,13 +12,13 @@ class CreateUsersActivitiesTable extends Migration {
 	 */
 	public function up()
 	{
-		Schema::create('users_activities', function(Blueprint $table)
+		Schema::create('registers_groups', function(Blueprint $table)
 		{
             $table->engine ='InnoDB';
 
 			$table->increments('id');
             $table->integer('user_id');
-            $table->integer('activity_id');
+            $table->integer('group_id');
 			$table->timestamps();
 		});
 	}
@@ -30,7 +30,7 @@ class CreateUsersActivitiesTable extends Migration {
 	 */
 	public function down()
 	{
-		Schema::drop('users_activities');
+		Schema::drop('registers_groups');
 	}
 
 }
