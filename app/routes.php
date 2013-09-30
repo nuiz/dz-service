@@ -65,6 +65,7 @@ Route::resource('showcase.comments', 'CommentController');
 Route::resource('class', 'ClassesController');
 Route::resource('class.group', 'ClassesGroupController');
 Route::resource('class.group.user', 'ClassesGroupUserController');
+Route::resource('class.group.register', 'ClassesGroupRegisterController');
 
 Route::resource('news', 'NewsController');
 
@@ -73,8 +74,11 @@ Route::resource('lesson.chapter', 'LessonChapterController');
 Route::resource('lesson.chapter.video', 'LessonChapterVideoController');
 
 Route::resource('activity', 'ActivityController');
+Route::resource('activity.user', 'ActivityUserController');
+Route::delete('activity/{id}/user', 'ActivityUserController@delete');
 
 Route::resource('dz_object.comment', 'CommentController');
 Route::resource('dz_object.like', 'LikeController');
+Route::delete('dz_object/{dz_object}/like', 'LikeController@delete');
 
 Route::controller('facebook', 'FacebookController');

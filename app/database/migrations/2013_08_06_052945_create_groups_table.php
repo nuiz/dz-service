@@ -18,10 +18,12 @@ class CreateGroupsTable extends Migration {
 
             $table->increments('id');
             $table->integer('class_id');
+            $table->integer('picture_id');
 
             $table->string('name');
             $table->string('description');
             $table->integer('user_length');
+            $table->integer('register_length');
 			$table->timestamps();
 
             $table->index(array('class_id'));

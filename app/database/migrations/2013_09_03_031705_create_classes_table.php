@@ -17,8 +17,11 @@ class CreateClassesTable extends Migration {
             $table->engine ='InnoDB';
 
             $table->increments('id');
+            $table->string('logo');
+            $table->string('color');
             $table->string('name');
-            $table->string('description');
+
+            $table->integer('group_length');
 			$table->timestamps();
 		});
 	}

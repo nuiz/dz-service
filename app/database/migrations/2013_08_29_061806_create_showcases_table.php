@@ -18,6 +18,16 @@ class CreateShowcasesTable extends Migration {
 
             $table->increments('id');
             $table->string('youtube_id');
+
+            $table->string('name');
+            $table->string('description');
+            $table->string('thumb');
+            $table->integer('duration');
+
+            $table->integer('like_count');
+            $table->integer('view_count');
+            $table->integer('comment_count');
+
 			$table->timestamps();
 		});
 	}

@@ -110,7 +110,7 @@ class CommentController extends BaseController implements ResourceInterface {
                 $comment->length = UserComment::where('object_id', '=', $object_id)->count();
                 $comment->save();
 
-                $res = $user_comment->attributesToArray();
+                $res = $user_comment->toArray();
             });
             return Response::json($res);
         }

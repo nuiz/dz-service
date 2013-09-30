@@ -10,10 +10,4 @@
 class Picture extends DZEloquent {
     protected $_dz_type = 'picture';
     protected $table = 'pictures';
-
-    public function delete()
-    {
-        @unlink("picture/".$this->picture_link);
-        return parent::delete();
-    }
 }

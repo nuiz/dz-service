@@ -16,20 +16,11 @@ class ClassesController extends BaseController {
     public function index()
     {
         $classes = Classes::all();
-        $data = array();
+        $data = $classes->toArray();
 
-        $groups = Group::all();
-        foreach($classes as $key => $value){
-            $data[$key] = $value->toArray();
-            $groupsFillter = $groups->filter(function($item) use($value){
-                if($item->class_id==$value->id)
-                    return true;
-            });
-            $data[$key]['groups'] = array();
-            $data[$key]['groups'] = array(
-                'data'=> $groupsFillter->toArray(),
-                'length'=> $groupsFillter->count()
-            );
+        foreach($data as $key => $value){
+            $logo = $value['logo'];
+            $data[$key]['logo_link'] = URL::to("lesson_logo/Dancer{$logo}Ip5@2x.png");
         }
         return Response::json(array(
             'length'=> $classes->count(),
@@ -42,12 +33,17 @@ class ClassesController extends BaseController {
         try {
             $classed = new Classes();
             $validator = Validator::make(Input::all(), array(
-                'name'=> 'required'
+                'name'=> 'required',
+                'color'=> 'required',
+                'logo'=> 'required'
             ));
             if($validator->fails()){
                 throw new Exception($validator->errors());
             }
             $classed->name = Input::get('name');
+            $classed->logo = Input::get('logo');
+            $classed->color = Input::get('color');
+            $classed->description = Input::get('description');
 
             $classed->save();
             return  Response::json($classed);
@@ -59,8 +55,11 @@ class ClassesController extends BaseController {
 
     public function show($id){
         try {
-            $classed = Classes::find($id);
-            return Response::json($classed);
+            $classed = Classes::findOrFail($id);
+            $data = $classed->toArray();
+            $logo = $data['logo'];
+            $data['logo_link'] = URL::to("lesson_logo/Dancer{$logo}Ip5@2x.png");
+            return Response::json($data);
         }
         catch (Exception $e) {
             return Response::exception($e);

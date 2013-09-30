@@ -15,6 +15,7 @@ class LessonChapterVideoController extends BaseController {
             $data = $videos->toArray();
             foreach($data as $key => $value){
                 $data[$key]['link'] = URL::to('video/'.$value['video_link']);
+                $data[$key]['thumb'] = URL::to('video/'.$value['id'].'.jpeg');
 
                 if($this->_isset_field('like')){
                     $data[$key]['like'] = Like::find($value['id'])->toArray();
@@ -42,6 +43,7 @@ class LessonChapterVideoController extends BaseController {
             $item = Video::findOrFail($id);
             $data = $item->toArray();
             $data['link'] = URL::to('video/'.$data['video_link']);
+            $data['thumb'] = URL::to('video/'.$data['id'].'.jpeg');
 
             if($this->_isset_field('like')){
                 $data['like'] = Like::find($id)->toArray();
@@ -68,7 +70,8 @@ class LessonChapterVideoController extends BaseController {
                 $validator = Validator::make(Input::all(), array(
                     'name'=> array('required'),
                     'description'=> array('required'),
-                    'video'=> array('required')
+                    'video'=> array('required'),
+                    'is_public'=> array('required')
                 ));
                 if($validator->fails()){
                     throw new Exception($validator->errors()->first());
@@ -85,11 +88,19 @@ class LessonChapterVideoController extends BaseController {
                 $video->chapter_id = $chapter_id;
                 $video->name = Input::get('name');
                 $video->description = Input::get('description');
+                $video->is_public = Input::get('is_public');
                 $video->save();
 
                 $name = $video->id.'.'.$ext;
                 $videoFile->move('video', $name);
                 chmod('video/'.$name, 0777);
+
+                $video_path = 'video/'.$name;
+                $thumbnail_path = 'video/'.$video->id.'.jpeg';
+
+                // shell command [highly simplified, please don't run it plain on your script!]
+                shell_exec("ffmpeg -i {$video_path} -deinterlace -an -ss 1 -t 00:00:01 -r 1 -y -vcodec mjpeg -f mjpeg {$thumbnail_path} 2>&1");
+                chmod($thumbnail_path, 0777);
 
                 $video->video_link = $name;
                 $video->save();
@@ -134,6 +145,13 @@ class LessonChapterVideoController extends BaseController {
                     $name = $item->id.'.'.$ext;
                     $videoFile->move('video', $name);
                     chmod('video/'.$name, 0777);
+
+                    $video_path = 'video/'.$name;
+                    $thumbnail_path = 'video/'.$item->id.'.jpeg';
+
+                    // shell command [highly simplified, please don't run it plain on your script!]
+                    shell_exec("ffmpeg -i {$video_path} -deinterlace -an -ss 1 -t 00:00:01 -r 1 -y -vcodec mjpeg -f mjpeg {$thumbnail_path} 2>&1");
+                    chmod($thumbnail_path, 0777);
 
                     $item->video_link = $name;
                 }
