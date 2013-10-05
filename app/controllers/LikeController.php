@@ -47,6 +47,7 @@ class LikeController extends BaseController {
 
     public function store($object_id)
     {
+        error_log("header token action like: ".Input::header('X-Auth-Token'));
         try {
             $res = array();
             DB::transaction(function() use(&$res, $object_id){
