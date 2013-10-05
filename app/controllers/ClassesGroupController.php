@@ -22,30 +22,26 @@ class ClassesGroupController extends BaseController {
     public function index($class_id)
     {
         $groups = Group::where('class_id', '=', $class_id)->get();
-        $data = array();
-        if($groups->count() > 0){
-            $data = $groups->toArray();
-        }
+        $data = $groups->toArray();
 
-        $pictures_id = $groups->lists('picture_id');
-        if(count($pictures_id) > 0){
-            $pictures = Picture::whereIn('id', $pictures_id)->get();
+        $videos_id = $groups->lists('video_id');
+        if(count($videos_id) > 0){
+            $videos = NewsVideo::whereIn('id', $videos_id)->get();
         }
         foreach($data as $key => $value){
-            $picture = array('link'=> URL::to("picture/default.jpg"));
-            if($pictures_id>0){
-                $buffer = $pictures->filter(function($item) use ($value){
-                    if($value['picture_id']==$item->id){
+            if($videos_id>0){
+                $buffer = $videos->filter(function($item) use ($value){
+                    if($value['video_id']==$item->id){
                         return true;
                     }
                 });
                 if($buffer->count()>0){
                     $buffer2 = $buffer->first()->toArray();
-                    $buffer2['link'] = URL::to('picture/'.$buffer2['picture_link']);
-                    $picture = $buffer2;
+                    $buffer2['link'] = URL::to('news_video/'.$buffer2['video_link']);
+                    $buffer2['thumb'] = URL::to('news_video/'.$buffer2['id'].'.jpeg');
+                    $data[$key]['video'] = $buffer2;
                 }
             }
-            $data[$key]['picture'] = $picture;
         }
 
         return Response::json(array(
@@ -60,19 +56,21 @@ class ClassesGroupController extends BaseController {
             $group = Group::findOrFail($group_id);
             $response = $group->toArray();
 
+            /*
             if($this->_isset_field('users')){
                 $users = UserGroup::where('group_id', '=', $group_id)->with('user')->get();
                 $response['users'] = array('data'=> array(), 'length'=> 0);
                 $response['users']['data'] = $users->toArray();
-                $response['users']['length'] = count($response['users']['data']);
             }
+            */
 
             $data = $group->toArray();
-            $picture = Picture::find($data['picture_id']);
-            if(is_null($picture))
-                $data['picture'] = array('link'=> URL::to("picture/default.jpg"));
-            else
-                $data['picture'] = $picture->toArray();
+            $video = NewsVideo::find($data['video_id']);
+            if(!is_null($video)){
+                $data['video'] = $video->toArray();
+                $data['video']['thumb'] = URL::to('news_video/'.$video->id.'.jpeg');
+                $data['video']['link'] = URL::to('news_video/'.$video->video_link);
+            }
 
             return Response::json($data);
         }
@@ -84,49 +82,61 @@ class ClassesGroupController extends BaseController {
     public function store($class_id)
     {
         try {
-            $response = array();
-            DB::transaction(function() use(&$response, $class_id){
+            $res = array();
+            DB::transaction(function() use(&$res, $class_id){
                 $validator = Validator::make(Input::all(), array(
                     'name'=> array('required'),
                     'description'=> array('required'),
+                    'video'=> array('required')
                 ));
                 if($validator->fails())
                     throw new Exception($validator->messages()->first());
+
+                $classed = Classes::findOrFail($class_id);
 
                 $group = new Group();
                 $group->name = Input::get('name');
                 $group->description = Input::get('description');
                 $group->class_id = $class_id;
 
-                if(Input::hasFile('picture')){
-                    $picFile = Input::file('picture');
-                    $ext = strtolower($picFile->getClientOriginalExtension());
-                    $pic_allows = array('jpg', 'jpeg', 'png');
+                // video
+                if(!Input::hasFile('video')){
+                    throw new Exception("this action is required upload video");
+                }
+                $media = Input::file('video');
+                $ext = strtolower($media->getClientOriginalExtension());
 
-                    if(!in_array($ext, $pic_allows)){
-                        throw new Exception("Picture upload allow jpg,jpeg,png only");
-                    }
-
-                    $picture = new Picture();
-                    list($width, $height, $type, $attr) = getimagesize($picFile->getRealPath());
-                    $picture->size_x = $width;
-                    $picture->size_y = $height;
-                    $picture->save();
-
-                    $name = $picture->id.'.'.$ext;
-                    $picFile->move('picture', $name);
-                    chmod('picture/'.$name, 0777);
-
-                    $picture->picture_link = $name;
-                    $picture->save();
-
-                    $group->picture_id = $picture->id;
+                if($ext != 'mp4'){
+                    throw new Exception("media type not allow");
                 }
 
+                $news_video = new NewsVideo();
+                $news_video->save();
+
+                $name = $news_video->id.'.'.$ext;
+                $media->move('news_video', $name);
+                chmod('news_video/'.$name, 0777);
+
+                $video_path = 'news_video/'.$name;
+                $thumbnail_path = 'news_video/'.$news_video->id.'.jpeg';
+
+                // shell command [highly simplified, please don't run it plain on your script!]
+                shell_exec("ffmpeg -i {$video_path} -deinterlace -an -ss 1 -t 00:00:01 -r 1 -y -vcodec mjpeg -f mjpeg {$thumbnail_path} 2>&1");
+                chmod($thumbnail_path, 0777);
+
+                $news_video->video_link = $name;
+                $news_video->save();
+
+                $group->video_id = $news_video->id;
+
                 $group->save();
-                $response = $group->toArray();
+                $classed->group_length = Group::where("class_id", "=", $class_id)->count();
+                $classed->save();
+
+                $res = $group->toArray();
+                $res['video'] = $news_video->toArray();
             });
-            return Response::json($response);
+            return Response::json($res);
         }
         catch (Exception $e) {
             DB::rollBack();
@@ -166,8 +176,15 @@ class ClassesGroupController extends BaseController {
             $response = array();
             DB::transaction(function() use($group_id, &$response){
                 $group = Group::findOrFail($group_id);
+                $video = NewsVideo::find($group->video_id);
                 $response = $group->toArray();
                 $group->delete();
+
+                if(!is_null($video)){
+                    $video_path = "news_video/".$video->video_link;
+                    $video->delete();
+                    @unlink($video_path);
+                }
             });
             return Response::json($response);
         }

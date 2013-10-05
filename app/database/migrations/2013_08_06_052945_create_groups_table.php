@@ -18,7 +18,7 @@ class CreateGroupsTable extends Migration {
 
             $table->increments('id');
             $table->integer('class_id');
-            $table->integer('picture_id');
+            $table->integer('video_id');
 
             $table->string('name');
             $table->string('description');

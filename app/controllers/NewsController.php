@@ -231,31 +231,135 @@ class NewsController extends BaseController {
                 $item = News::findOrFail($id);
 
                 if(Input::has('name')){
-                    $item = Input::get('name');
+                    $item->name = Input::get('name');
                 }
 
                 if(Input::has('message')){
-                    $item->name = Input::get('message');
+                    $item->message = Input::get('message');
                 }
 
-                if(Input::hasFile('picture')){
-                    $picture = new Picture();
-                    list($width, $height, $type, $attr) = getimagesize(Input::file('picture')->getRealPath());
-                    $picture->size_x = $width;
-                    $picture->size_y = $height;
-                    $picture->save();
+                if(Input::has('deleteMedia') && Input::get('deleteMedia')=='yes'){
+                    $oldType = $item->media_type;
+                    if($oldType=='picture'){
+                        $picture = Picture::find($item->picture_id);
+                        $oldPath = "picture/".$picture->picture_link;
 
-                    $name = $picture->id.'.'.Input::file('picture')->getClientOriginalExtension();
-                    Input::file('picture')->move('picture', $name);
-                    chmod('picture/'.$name, 0777);
+                        $item->media_type = "none";
+                        $picture->delete();
+                    }
+                    else if($oldType=='video') {
+                        $video = NewsVideo::find($item->video_id);
+                        $oldPath = "news_video/".$video->video_link;
 
-                    $picture->picture_link = $name;
-                    $picture->save();
-                    $item->picture_id = $picture->id;
+                        $item->media_type = "none";
+                        $video->delete();
+                    }
+                    $item->picture_id = 0;
+                    $item->video_id = 0;
                 }
 
                 $item->save();
                 $res = $item->toArray();
+            });
+            return Response::json($res);
+        }
+        catch (Exception $e){
+            DB::rollBack();
+            return Response::exception($e);
+        }
+    }
+
+    public function editMedia($id)
+    {
+        try {
+            $res = array();
+            if(!Input::hasFile('media')){
+                throw new Exception('editMedia file require media upload');
+            }
+
+            DB::transaction(function() use(&$res, $id){
+                $item = News::findOrFail($id);
+
+                $oldMedia = null;
+                $oldPath = null;
+                if($item->media_type=="picutre"){
+                    $oldMedia = Picture::find($item->picture_id);
+                    if(!is_null($oldMedia))
+                        $oldPath = "picture/{$oldMedia->picture_link}";
+                }
+                else if($item->media_type=="video"){
+                    $oldMedia = Video::find($item->picture_id);
+                    if(!is_null($oldMedia))
+                        $oldPath = "picture/{$oldMedia->video_link}";
+                }
+
+                $media = Input::file('media');
+                $ext = strtolower($media->getClientOriginalExtension());
+
+                $pic_allows = array('jpg', 'jpeg', 'png');
+                $video_allows = array('mp4');
+
+                if(in_array($ext, $pic_allows)){
+                    $picture = new Picture();
+                    list($width, $height, $type, $attr) = getimagesize($media->getRealPath());
+                    $picture->size_x = $width;
+                    $picture->size_y = $height;
+                    $picture->save();
+
+                    $name = $picture->id.'.'.$ext;
+                    $media->move('picture', $name);
+                    chmod('picture/'.$name, 0777);
+
+                    $picture->picture_link = $name;
+                    $picture->save();
+
+                    $item->video_id = 0;
+                    $item->picture_id = $picture->id;
+                    $item->media_type = 'picture';
+                }
+                else if(in_array($ext, $video_allows)){
+                    $news_video = new NewsVideo();
+                    $news_video->save();
+
+                    $name = $news_video->id.'.'.$ext;
+                    $media->move('news_video', $name);
+                    chmod('news_video/'.$name, 0777);
+
+                    $video_path = 'news_video/'.$name;
+                    $thumbnail_path = 'news_video/'.$news_video->id.'.jpeg';
+
+                    // shell command [highly simplified, please don't run it plain on your script!]
+                    shell_exec("ffmpeg -i {$video_path} -deinterlace -an -ss 1 -t 00:00:01 -r 1 -y -vcodec mjpeg -f mjpeg {$thumbnail_path} 2>&1");
+                    chmod($thumbnail_path, 0777);
+
+                    $news_video->video_link = $name;
+                    $news_video->save();
+
+                    $item->picture_id = 0;
+                    $item->video_id = $news_video->id;
+                    $item->media_type = 'video';
+                }
+                else {
+                    throw new Exception('media type not allow');
+                }
+
+                $item->save();
+                $res = $item->toArray();
+                if($item->media_type=='picture'){
+                    $res['picture'] = $picture->toArray();
+                    $res['picture']['link'] = URL::to("picture/".$picture->picture_link);
+                }
+                else {
+                    $res['video'] = $news_video->toArray();
+                    $res['video']['link'] = URL::to("news_video/".$news_video->video_link);
+                }
+
+                if(!is_null($oldMedia)){
+                    @$oldMedia->delete();
+                }
+                if(!is_null($oldPath)){
+                    @unlink($oldPath);
+                }
             });
             return Response::json($res);
         }

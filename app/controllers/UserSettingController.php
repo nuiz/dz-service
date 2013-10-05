@@ -18,26 +18,6 @@ class UserSettingController extends BaseController implements ResourceInterface 
         );
     }
 
-    public function _validate_permission($user_id, $resource, $action)
-    {
-        $rules = $this->_rules();
-
-        if(!isset($rules[$resource]))
-            return true;
-        if(!isset($rules[$resource][$action]))
-            return true;
-
-        $rule = $rules[$resource][$action];
-        if(array_search('owner', $rule)!==false){
-            if(!$this->_auth_owner($user_id))
-                throw new Exception("You not have permission for this action");
-        }
-        if(array_search('admin', $rule)!==false){
-            if(!$this->_auth_admin())
-                throw new Exception("You not have permission for this action");
-        }
-    }
-
     public function index($user_id)
     {
         try {
@@ -47,8 +27,9 @@ class UserSettingController extends BaseController implements ResourceInterface 
                 $setting = new UserSetting();
                 $setting->id = $user->id;
                 $setting->save();
+                $setting = UserSetting::find($user->id);
             }
-            return Response::json($setting);
+            return Response::json($setting->toArray());
         }
         catch (Exception $e) {
             DB::rollBack();
@@ -58,10 +39,15 @@ class UserSettingController extends BaseController implements ResourceInterface 
 
     public function store($user_id){
         try {
-            $this->_validate_permission($user_id, 'user.setting', 'get');
-            $this->_validate_permission($user_id, 'user.setting', 'update');
+            //$this->_validate_permission($user_id, 'user.setting', 'get');
+            //$this->_validate_permission($user_id, 'user.setting', 'update');
 
             $setting = UserSetting::find($user_id);
+            if(is_null($setting)){
+                $setting = new UserSetting();
+                $setting->id = $user_id;
+            }
+
             if(Input::has('new_update'))
                 $setting->new_update = Input::get('new_update');
             if(Input::has('new_showcase'))
@@ -74,10 +60,9 @@ class UserSettingController extends BaseController implements ResourceInterface 
             if(!$setting->save())
                 throw new Exception('setting update error');
 
-            return Response::json($setting);
+            return Response::json($setting->toArray());
         } catch (Exception $e) {
             return Response::exception($e);
         }
-
     }
 }

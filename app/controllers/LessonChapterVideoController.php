@@ -126,34 +126,15 @@ class LessonChapterVideoController extends BaseController {
                 $item = Video::findOrFail($id);
 
                 if(Input::has('name')){
-                    $item = Input::get('name');
+                    $item->name = Input::get('name');
                 }
 
+                if(Input::has('is_public')){
+                    $item->is_public = Input::get('is_public');
+                }
 
                 if(Input::has('description')){
-                    $item->name = Input::get('description');
-                }
-
-                if(Input::hasFile('video')){
-                    $videoFile = Input::file('video');
-                    $ext = strtolower($videoFile->getClientOriginalExtension());
-                    $allows = array('mp4', '3gp');
-                    if(!in_array($ext, $allows) ) {
-                        throw new Exception('file upload not allowed');
-                    }
-
-                    $name = $item->id.'.'.$ext;
-                    $videoFile->move('video', $name);
-                    chmod('video/'.$name, 0777);
-
-                    $video_path = 'video/'.$name;
-                    $thumbnail_path = 'video/'.$item->id.'.jpeg';
-
-                    // shell command [highly simplified, please don't run it plain on your script!]
-                    shell_exec("ffmpeg -i {$video_path} -deinterlace -an -ss 1 -t 00:00:01 -r 1 -y -vcodec mjpeg -f mjpeg {$thumbnail_path} 2>&1");
-                    chmod($thumbnail_path, 0777);
-
-                    $item->video_link = $name;
+                    $item->description = Input::get('description');
                 }
 
                 $item->save();
@@ -162,6 +143,59 @@ class LessonChapterVideoController extends BaseController {
             return Response::json($res);
         }
         catch (Exception $e){
+            DB::rollBack();
+            return Response::exception($e);
+        }
+    }
+
+    public function editVideo($lesson_id, $chapter_id, $id)
+    {
+        try {
+            $res = array();
+            DB::transaction(function() use(&$res, $lesson_id, $chapter_id, $id) {
+                if(!Input::hasFile('video')){
+                    throw new Exception("this action required video upload");
+                }
+
+                $item = Video::findOrFail($id);
+                $videoFile = Input::file('video');
+                $ext = strtolower($videoFile->getClientOriginalExtension());
+                $allows = array('mp4');
+                if(!in_array($ext, $allows) ) {
+                    throw new Exception('file upload not allowed');
+                }
+
+                $name = $item->id.'.'.$ext;
+                $video_path = 'video/'.$name;
+                $thumbnail_path = 'video/'.$item->id.'.jpeg';
+
+                /*
+                if(file_exists($video_path)){
+                    unlink($video_path);
+                }
+                */
+
+                $videoFile->move('video', $name);
+                chmod('video/'.$name, 0777);
+
+                /*
+                if(file_exists($thumbnail_path)){
+                    unlink($thumbnail_path);
+                }
+                */
+
+                // shell command [highly simplified, please don't run it plain on your script!]
+                shell_exec("ffmpeg -i {$video_path} -deinterlace -an -ss 1 -t 00:00:01 -r 1 -y -vcodec mjpeg -f mjpeg {$thumbnail_path} 2>&1");
+                chmod($thumbnail_path, 0777);
+
+                $item->video_link = $name;
+                $item->save();
+                $res = $item->toArray();
+                $res['link'] = "video/".$item->video_link;
+            });
+            return Response::json($res);
+        }
+        catch (Exception $e) {
             DB::rollBack();
             return Response::exception($e);
         }
@@ -182,6 +216,7 @@ class LessonChapterVideoController extends BaseController {
                 $chapter->save();
 
                 @unlink('video/'.$video_file);
+                @unlink('video/'.$video->id.'.jpeg');
             });
             return Response::json($res);
         }

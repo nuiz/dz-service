@@ -10,11 +10,11 @@
 namespace Extend\Laravel;
 
 class Response extends \Illuminate\Support\Facades\Response {
-    public static function data($data)
+    public static function json($data = array(), $status = 200, array $headers = array())
     {
-        return parent::json(array(
-            'data'=> $data
-        ));
+        $res = parent::json($data);
+        $res->headers->add(array("Content-Length"=> strlen($res->getContent())));
+        return $res;
     }
 
     public static function exception($e)
@@ -36,6 +36,5 @@ class Response extends \Illuminate\Support\Facades\Response {
         return '<pre>'.
             print_r($data, true).
             '</pre>';
-
     }
 }

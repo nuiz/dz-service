@@ -16,10 +16,11 @@ class LessonController extends BaseController {
             $logo = $value['logo'];
             $data[$key]['logo_link'] = URL::to("lesson_logo/Dancer{$logo}Ip5@2x.png");
         }
-        return Response::json(array(
+        $res = Response::json(array(
             'length'=> count($data),
             'data'=> $data
         ));
+        $res->send();
     }
 
     public function show($id)
@@ -74,7 +75,11 @@ class LessonController extends BaseController {
                 $lesson = Lesson::findOrFail($id);
 
                 if(Input::has('color')){
-                    $lesson = Input::get('color');
+                    $lesson->color = Input::get('color');
+                }
+
+                if(Input::has('logo')){
+                    $lesson->logo = Input::get('logo');
                 }
 
                 if(Input::has('name')){

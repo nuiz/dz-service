@@ -182,6 +182,7 @@ return array(
 		'Validator'       => 'Illuminate\Support\Facades\Validator',
 		'View'            => 'Illuminate\Support\Facades\View',
 
+        'IOSPush'         => 'Extend\Laravel\IOSPush',
         'Response'        => 'Extend\Laravel\Response',
         'Helper'          => 'Extend\Laravel\Helper',
 

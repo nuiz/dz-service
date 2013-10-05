@@ -61,4 +61,13 @@ class User extends DZEloquent implements UserInterface, RemindableInterface, Own
         return $user->id===$this->id;
     }
 
+    public function save(array $options = array())
+    {
+        if(!$this->exists){
+            $setting = new Setting();
+            $setting->id = $this->id;
+            $setting->save();
+        }
+        return parent::save($options);
+    }
 }

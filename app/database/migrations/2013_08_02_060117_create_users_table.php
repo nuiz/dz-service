@@ -21,6 +21,7 @@ class CreateUsersTable extends Migration {
             $table->string('username')->nullable();
 
             $table->string('facebook_id')->nullable();
+            $table->string('ios_device_token')->nullable();
             $table->string('password');
             $table->string('first_name');
             $table->string('last_name');

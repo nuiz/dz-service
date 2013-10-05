@@ -47,6 +47,11 @@ Route::post('auth', function(){
     $serializedToken = AuthToken::publicToken($token);
     $user = AuthToken::user($token);
 
+    if(Input::has("deviceToken")){
+        $user->ios_device_token = str_replace(array("<",">"," "), array("", "", ""), Input::get("deviceToken"));
+        $user->save();
+    }
+
     return Response::json(array('token' => $serializedToken, 'user' => $user->toArray()));
 });
 Route::delete('auth', 'AuthTokenController@destroy');
@@ -65,17 +70,24 @@ Route::resource('showcase.comments', 'CommentController');
 Route::resource('class', 'ClassesController');
 Route::resource('class.group', 'ClassesGroupController');
 Route::resource('class.group.user', 'ClassesGroupUserController');
+Route::resource('class.group.register', 'ClassesGroupRegisterController');
 
 Route::resource('news', 'NewsController');
+Route::post('news/{news_id}/editMedia', 'NewsController@editMedia');
 
 Route::resource('lesson', 'LessonController');
 Route::resource('lesson.chapter', 'LessonChapterController');
+Route::post('lesson/{lesson_id}/chapter/{chapter_id}/editPicture', 'LessonChapterController@editPicture');
 Route::resource('lesson.chapter.video', 'LessonChapterVideoController');
+Route::post('lesson/{lesson_id}/chapter/{chapter_id}/video/{video_id}/editVideo', 'LessonChapterVideoController@editVideo');
 
 Route::resource('activity', 'ActivityController');
+Route::post('activity/{activity_id}/editPicture', 'ActivityController@editPicture');
 Route::resource('activity.user', 'ActivityUserController');
+Route::delete('activity/{id}/user', 'ActivityUserController@delete');
 
 Route::resource('dz_object.comment', 'CommentController');
 Route::resource('dz_object.like', 'LikeController');
+Route::delete('dz_object/{dz_object}/like', 'LikeController@delete');
 
 Route::controller('facebook', 'FacebookController');

@@ -73,21 +73,20 @@ class ActivityUserController extends BaseController {
         }
     }
 
-    public function delete($activity_id, $user_id)
+    public function delete($activity_id)
     {
         try {
+            $user = Auth::getUser();
+            if(is_null($user)){
+                throw new Exception("this actoin is required authenticate");
+            }
             $res = array();
-            DB::transaction(function() use(&$res, $activity_id, $user_id){
-                $user = Auth::getUser();
-                if(!$user){
-                    throw new \Tappleby\AuthToken\Exceptions\NotAuthorizedException();
-                }
-
+            DB::transaction(function() use(&$res, $activity_id, $user){
                 $activity = Activity::findOrFail($activity_id);
-                $buffer = UserActivity::where("user_id", "=", $user_id)->where("activity_id", "=", $activity_id)->get();
+                $buffer = UserActivity::where("user_id", "=", $user->id)->where("activity_id", "=", $activity_id)->get();
                 if($buffer->count() > 0){
                     $user_activity = $buffer->first();
-                    $user_activity->detele();
+                    $user_activity->delete();
                 }
 
                 $activity->user_length = UserActivity::where("activity_id", "=", $activity_id)->count();

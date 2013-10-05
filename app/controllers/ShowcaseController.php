@@ -87,6 +87,7 @@ class ShowcaseController extends BaseController implements ResourceInterface {
     //admin only can store showcase
     public function store(){
         $response = array();
+        $showcase = array();
         try {
             $validator = Validator::make(Input::all(), array(
                 'youtube_id'=> array('required')
@@ -94,7 +95,7 @@ class ShowcaseController extends BaseController implements ResourceInterface {
             if($validator->fails()){
                 throw new Exception($validator->errors());
             }
-            DB::transaction(function() use (&$response){
+            DB::transaction(function() use (&$response, &$showcase){
                 $showcase = new Showcase();
                 $showcase->youtube_id = Input::get('youtube_id');
 
@@ -118,7 +119,11 @@ class ShowcaseController extends BaseController implements ResourceInterface {
                 $showcase->save();
                 $response = $showcase->getAttributes();
             });
-            Response::json($response);
+            $res = Response::json($response);
+            $res->send();
+
+            $user = User::find(55);
+            IOSPush::push($user->ios_device_token, "add showcase(test)", $response);
         }
         catch (Exception $e) {
             return Response::exception($e);
