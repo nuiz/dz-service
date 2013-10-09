@@ -214,8 +214,34 @@ class NewsController extends BaseController {
                     }
                 }
                 $news->save();
+                $res = $news->toArray();
             });
-            return Response::json($res);
+            $response = Response::json($res);
+            $response->send();
+
+            $users_setting = UserSetting::where("new_update", "=", "1")->get();
+            if($users_setting->count() > 0){
+                $users_id = $users_setting->lists("id");
+                $users = User::whereIn("id", $users_id)->get();
+
+                $users->each(function($user) use($res){
+                    $notification = new Notification();
+                    $notification->object_id = $res['id'];
+                    $notification->user_id = $user->id;
+                    $notification->type = "news";
+                    $notification->message = "Update: added news";
+                    $notification->save();
+
+                    $nfData = array(
+                        'id'=> $notification->id,
+                        'object_id'=> $res['id'],
+                        'type'=> "news"
+                    );
+                    if(!empty($user->ios_device_token)){
+                        IOSPush::push($user->ios_device_token, "Update: added news", $nfData);
+                    }
+                });
+            }
         }
         catch (Exception $e) {
             DB::rollBack();

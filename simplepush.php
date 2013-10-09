@@ -1,7 +1,7 @@
 <?php
 
 // Put your device token here (without spaces):
-$deviceToken = '557595f96b5d0fd00bd7303241d440ad90a0a9433da563ae89d34cca5a6f54b2';
+$deviceToken = '363ddeb4750659c6b26b229453572a7f6bb64fcf81102e15fbe83e3185c3e394';
 
 // Put your private key's passphrase here:
 $passphrase = 'DanceZone';

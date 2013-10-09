@@ -10,6 +10,7 @@
 class LessonChapterController extends BaseController {
     public function index($lesson_id)
     {
+        $lesson = Lesson::findOrFail($lesson_id);
         $chapters = Chapter::where('lesson_id', '=', $lesson_id)->get();
         $data = $chapters->toArray();
 
@@ -32,6 +33,7 @@ class LessonChapterController extends BaseController {
                 }
             }
             $data[$key]['picture'] = $picture;
+            $data[$key]['color'] = $lesson->color;
         }
         return Response::json(array(
             'length'=> count($data),
@@ -42,6 +44,7 @@ class LessonChapterController extends BaseController {
     public function show($lesson_id, $id)
     {
         try {
+            $lesson = Lesson::findOrFail($lesson_id);
             $chapter = Chapter::findOrFail($id);
             $data = $chapter->toArray();
             $picture = Picture::find($data['picture_id']);
@@ -51,6 +54,7 @@ class LessonChapterController extends BaseController {
                 $data['picture'] = $picture->toArray();
                 $data['picture']['link'] = URL::to("picture/".$picture->picture_link);
             }
+            $data['color'] = $lesson->color;
 
             return Response::json($data);
         }
@@ -112,7 +116,32 @@ class LessonChapterController extends BaseController {
 
                 $res = $chapter->toArray();
             });
-            return Response::json($res);
+            $resp = Response::json($res);
+            $resp->send();
+
+            $users_setting = UserSetting::where("new_lesson", "=", "1")->get();
+            if($users_setting->count() > 0){
+                $users_id = $users_setting->lists("id");
+                $users = User::whereIn("id", $users_id)->get();
+
+                $users->each(function($user) use($res){
+                    $notification = new Notification();
+                    $notification->object_id = $res['id'];
+                    $notification->user_id = $user->id;
+                    $notification->type = "chapter";
+                    $notification->message = "Update: added chapter";
+                    $notification->save();
+
+                    $nfData = array(
+                        'id'=> $notification->id,
+                        'object_id'=> $res['id'],
+                        'type'=> "chapter"
+                    );
+                    if(!empty($user->ios_device_token)){
+                        IOSPush::push($user->ios_device_token, "Update: added chapter", $nfData);
+                    }
+                });
+            }
         }
         catch (Exception $e) {
             DB::rollBack();

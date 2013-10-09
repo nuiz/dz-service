@@ -61,6 +61,7 @@ Route::controller('/authenticate', 'AuthenticateController');
 
 Route::resource('user', 'UserController');
 Route::resource('user.setting', 'UserSettingController');
+Route::put('user/{user_id}/setting', 'UserSettingController@update');
 Route::resource('user.change_password', 'UserChangePasswordController');
 Route::resource('user.picture', 'UserPictureController');
 
@@ -91,3 +92,5 @@ Route::resource('dz_object.like', 'LikeController');
 Route::delete('dz_object/{dz_object}/like', 'LikeController@delete');
 
 Route::controller('facebook', 'FacebookController');
+
+Route::resource('notification', 'NotificationController');

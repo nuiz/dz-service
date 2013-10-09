@@ -81,6 +81,8 @@ class FacebookController extends BaseController {
 
                 $data['user'] = $user->toArray();
                 $data['token'] = $publicToken;
+
+                Log::info("user id {$data['user']['id']} token: {$publicToken}");
             });
             return Response::json($data);
         } catch (Exception $e) {

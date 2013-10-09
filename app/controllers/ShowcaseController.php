@@ -122,8 +122,28 @@ class ShowcaseController extends BaseController implements ResourceInterface {
             $res = Response::json($response);
             $res->send();
 
-            $user = User::find(55);
-            IOSPush::push($user->ios_device_token, "add showcase(test)", $response);
+            $users_setting = UserSetting::where("new_showcase", "=", "1")->get();
+            if($users_setting->count() > 0){
+                $users_id = $users_setting->lists("id");
+                $users = User::whereIn("id", $users_id)->get();
+
+                $users->each(function($user) use($response){
+                    $notification = new Notification();
+                    $notification->object_id = $response['id'];
+                    $notification->user_id = $user->id;
+                    $notification->type = "showcase";
+                    $notification->message = "Update: added showcase";
+                    $notification->save();
+                    $nfData = array(
+                        'id'=> $notification->id,
+                        'object_id'=> $response['id'],
+                        'type'=> "showcase"
+                    );
+                    if(!empty($user->ios_device_token)){
+                        IOSPush::push($user->ios_device_token, "Update: added showcase", $nfData);
+                    }
+                });
+            }
         }
         catch (Exception $e) {
             return Response::exception($e);

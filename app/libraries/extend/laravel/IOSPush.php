@@ -9,25 +9,33 @@
 
 namespace Extend\Laravel;
 
-
 class IOSPush {
-    public static function push($deviceToken, $message, $data = array())
-    {
-        $passphrase = 'DanceZone';
+    private static $instance = null;
+    private $fp = null;
 
+    private function __construct(){
+        $this->makeFp();
+    }
+
+    private function makeFp(){
+        $passphrase = 'DanceZone';
         $ctx = stream_context_create();
         stream_context_set_option($ctx, 'ssl', 'local_cert', 'Certificates.pem');
         stream_context_set_option($ctx, 'ssl', 'passphrase', $passphrase);
 
 // Open a connection to the APNS server
-        $fp = stream_socket_client(
+        $this->fp = stream_socket_client(
             'ssl://gateway.sandbox.push.apple.com:2195', $err,
             $errstr, 60, STREAM_CLIENT_CONNECT|STREAM_CLIENT_PERSISTENT, $ctx);
 
-        if (!$fp)
+        if (!$this->fp)
             exit("Failed to connect: $err $errstr" . PHP_EOL);
+    }
 
-        echo 'Connected to APNS' . PHP_EOL;
+    public static function push($deviceToken, $message, $data = array()){
+        if(is_null(self::$instance)){
+            self::$instance = new IOSPush();
+        }
 
 // Create the payload body
         $body = array();
@@ -35,7 +43,7 @@ class IOSPush {
             'alert' => $message,
             'sound' => 'default'
         );
-        $body['dz_data'] = $data;
+        $body['dz'] = $data;
 
 // Encode the payload as JSON
         $payload = json_encode($body);
@@ -44,15 +52,15 @@ class IOSPush {
         $msg = chr(0) . pack('n', 32) . pack('H*', $deviceToken) . pack('n', strlen($payload)) . $payload;
 
 // Send it to the server
-        $result = fwrite($fp, $msg, strlen($msg));
+        $result = fwrite(self::$instance->fp, $msg, strlen($msg));
 
         if (!$result)
-            echo 'Message not delivered' . PHP_EOL;
-        else
-            echo 'Message successfully delivered' . PHP_EOL;
+            error_log('Message not delivered' . PHP_EOL);
+    }
 
-// Close the connection to the server
-        fclose($fp);
-
+    public function __destruct(){
+        // Close the connection to the server
+        if(!is_null($this->if))
+            fclose($this->fp);
     }
 }

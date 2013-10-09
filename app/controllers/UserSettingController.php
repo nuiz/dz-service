@@ -37,7 +37,7 @@ class UserSettingController extends BaseController implements ResourceInterface 
         }
     }
 
-    public function store($user_id){
+    public function update($user_id){
         try {
             //$this->_validate_permission($user_id, 'user.setting', 'get');
             //$this->_validate_permission($user_id, 'user.setting', 'update');
@@ -55,7 +55,7 @@ class UserSettingController extends BaseController implements ResourceInterface 
             if(Input::has('new_lesson'))
                 $setting->new_lesson = Input::get('new_lesson');
             if(Input::has('news_from_dancezone'))
-                $setting->news_from_dancezone = Input::has('news_from_dancezone');
+                $setting->news_from_dancezone = Input::get('news_from_dancezone');
 
             if(!$setting->save())
                 throw new Exception('setting update error');

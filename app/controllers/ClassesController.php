@@ -43,7 +43,6 @@ class ClassesController extends BaseController {
             $classed->name = Input::get('name');
             $classed->logo = Input::get('logo');
             $classed->color = Input::get('color');
-            $classed->description = Input::get('description');
 
             $classed->save();
             return  Response::json($classed);

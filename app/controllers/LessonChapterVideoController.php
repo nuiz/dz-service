@@ -13,6 +13,8 @@ class LessonChapterVideoController extends BaseController {
         try {
             $videos = Video::where('chapter_id', '=', $chapter_id)->get();
             $data = $videos->toArray();
+            $lesson = Lesson::findOrFail($lesson_id);
+
             foreach($data as $key => $value){
                 $data[$key]['link'] = URL::to('video/'.$value['video_link']);
                 $data[$key]['thumb'] = URL::to('video/'.$value['id'].'.jpeg');
@@ -26,6 +28,7 @@ class LessonChapterVideoController extends BaseController {
                 if($this->_isset_field('comment')){
                     $data[$key]['comment'] = Comment::find($value['id'])->toArray();
                 }
+                $data[$key]['color'] = $lesson->color;
             }
             return Response::json(array(
                 'length'=> $videos->count(),
@@ -40,6 +43,7 @@ class LessonChapterVideoController extends BaseController {
     public function show($lesson_id, $chapter_id, $id)
     {
         try {
+            $lesson = Lesson::findOrFail($lesson_id);
             $item = Video::findOrFail($id);
             $data = $item->toArray();
             $data['link'] = URL::to('video/'.$data['video_link']);
@@ -54,6 +58,7 @@ class LessonChapterVideoController extends BaseController {
             if($this->_isset_field('comment')){
                 $data['comment'] = Comment::find($id)->toArray();
             }
+            $data['color'] = $lesson->color;
             return Response::json($data);
         }
         catch (Exception $e) {
@@ -110,7 +115,32 @@ class LessonChapterVideoController extends BaseController {
 
                 $res = $video->toArray();
             });
-            return Response::json($res);
+            $resp = Response::json($res);
+            $resp->send();
+
+            $users_setting = UserSetting::where("new_lesson", "=", "1")->get();
+            if($users_setting->count() > 0){
+                $users_id = $users_setting->lists("id");
+                $users = User::whereIn("id", $users_id)->get();
+
+                $users->each(function($user) use($res){
+                    $notification = new Notification();
+                    $notification->object_id = $res['id'];
+                    $notification->user_id = $user->id;
+                    $notification->type = "video";
+                    $notification->message = "Update: added video";
+                    $notification->save();
+
+                    $nfData = array(
+                        'id'=> $notification->id,
+                        'object_id'=> $res['id'],
+                        'type'=> "video"
+                    );
+                    if(!empty($user->ios_device_token)){
+                        IOSPush::push($user->ios_device_token, "Update: added video", $nfData);
+                    }
+                });
+            }
         }
         catch (Exception $e) {
             DB::rollBack();

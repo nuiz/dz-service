@@ -19,7 +19,7 @@ class ClassesGroupUserController extends BaseController {
 
         $users = array();
         if(count($users_id)>0)
-            if($not) $users = User::whereNotIn('id', $users_id, 'and')->get()->toArray();
+            if(!$not) $users = User::whereNotIn('id', $users_id, 'and')->get()->toArray();
             else $users = User::whereIn('id', $users_id, 'and')->get()->toArray();
         else
             if(!$not) $users = User::all()->toArray();
@@ -30,6 +30,7 @@ class ClassesGroupUserController extends BaseController {
         ));
     }
 
+    /*
     public function show($class_id, $group_id, $id)
     {
         try {
@@ -40,6 +41,7 @@ class ClassesGroupUserController extends BaseController {
             return Response::exception($e);
         }
     }
+    */
 
     public function store($class_id, $group_id)
     {

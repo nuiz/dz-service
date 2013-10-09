@@ -7,6 +7,7 @@
  * To change this template use File | Settings | File Templates.
  */
 
-class Classes extends Eloquent {
-    protected $table = 'classes';
+class Classes extends DZEloquent {
+    protected $table = "classes";
+    protected $_dz_type = "class";
 }

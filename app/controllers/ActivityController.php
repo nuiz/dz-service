@@ -10,11 +10,15 @@
 class ActivityController extends BaseController {
     public function index()
     {
-        error_log("header token".Input::header('X-Auth-Token'));
         $user = Auth::getUser();
 
         if(isset($_GET['start_date']) && isset($_GET['end_date'])){
-            $collection = Activity::where(DB::raw("YEAR(start_time)"), ">=", $_GET['start_date'])->where(DB::raw("MONTH(start_time)"), "<=", $_GET['end_date'])->orderBy('created_at', 'desc')->get();
+            $collection = Activity::where("start_time", ">=", $_GET['start_date'])->where("start_time", "<=", $_GET['end_date'])->orderBy('created_at', 'desc')->get();
+        }
+        else if(isset($_GET['month']) && isset($_GET['year'])){
+            $collection = Activity::where(DB::raw("MONTH(start_time)"), "=", $_GET['month'])
+                ->where(DB::raw("YEAR(start_time)"), "=", $_GET['year'])
+                ->orderBy('created_at', 'desc')->get();
         }
         else {
             $collection = Activity::orderBy('created_at', 'desc')->get();
@@ -52,7 +56,6 @@ class ActivityController extends BaseController {
                     $items[$key]['like']['is_liked'] = UserLike::where('user_id', '=', Auth::getUser()->id)->where('object_id', '=', $value['id'])->count() > 0;
                 }
             }
-
         }
 
         $fnFilterDay = (function($date) use($items){
@@ -170,7 +173,33 @@ class ActivityController extends BaseController {
                 $item->save();
                 $res = $item->toArray();
             });
-            return Response::json($res);
+
+            $resp = Response::json($res);
+            $resp->send();
+
+            $users_setting = UserSetting::where("news_from_dancezone", "=", "1")->get();
+            if($users_setting->count() > 0){
+                $users_id = $users_setting->lists("id");
+                $users = User::whereIn("id", $users_id)->get();
+
+                $users->each(function($user) use($res){
+                    $notification = new Notification();
+                    $notification->object_id = $res['id'];
+                    $notification->user_id = $user->id;
+                    $notification->type = "activity";
+                    $notification->message = "Update: added activity";
+                    $notification->save();
+
+                    $nfData = array(
+                        'id'=> $notification->id,
+                        'object_id'=> $res['id'],
+                        'type'=> "activity"
+                    );
+                    if(!empty($user->ios_device_token)){
+                        IOSPush::push($user->ios_device_token, "Update: added activity", $nfData);
+                    }
+                });
+            }
         }
         catch (Exception $e) {
             DB::rollBack();

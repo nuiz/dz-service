@@ -59,7 +59,32 @@ class LessonController extends BaseController {
                 $lesson->save();
                 $res = $lesson->toArray();
             });
-            return Response::json($res);
+            $resp = Response::json($res);
+            $resp->send();
+
+            $users_setting = UserSetting::where("new_lesson", "=", "1")->get();
+            if($users_setting->count() > 0){
+                $users_id = $users_setting->lists("id");
+                $users = User::whereIn("id", $users_id)->get();
+
+                $users->each(function($user) use($res){
+                    $notification = new Notification();
+                    $notification->object_id = $res['id'];
+                    $notification->user_id = $user->id;
+                    $notification->type = "lesson";
+                    $notification->message = "Update: added lesson";
+                    $notification->save();
+
+                    $nfData = array(
+                        'id'=> $notification->id,
+                        'object_id'=> $res['id'],
+                        'type'=> "lesson"
+                    );
+                    if(!empty($user->ios_device_token)){
+                        IOSPush::push($user->ios_device_token, "Update: added lesson", $nfData);
+                    }
+                });
+            }
         }
         catch (Exception $e) {
             DB::rollBack();
