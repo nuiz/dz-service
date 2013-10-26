@@ -24,6 +24,9 @@ class CreateChaptersTable extends Migration {
             $table->string('name');
             $table->string('description');
             $table->integer('video_length');
+
+            $table->integer('sort_seq');
+
 			$table->timestamps();
 
             $table->index(array('lesson_id'));

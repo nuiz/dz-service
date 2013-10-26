@@ -11,7 +11,7 @@ class LessonChapterController extends BaseController {
     public function index($lesson_id)
     {
         $lesson = Lesson::findOrFail($lesson_id);
-        $chapters = Chapter::where('lesson_id', '=', $lesson_id)->get();
+        $chapters = Chapter::where('lesson_id', '=', $lesson_id)->orderBy('sort_seq', 'asc')->get();
         $data = $chapters->toArray();
 
         $pictures_id = $chapters->lists('picture_id');
@@ -93,15 +93,24 @@ class LessonChapterController extends BaseController {
                         throw new Exception("Picture upload allow jpg,jpeg,png only");
                     }
 
+                    $image = Image::make($picFile->getRealPath());
+                    $wide = $image->height > $image->width? false: true;
+                    if($wide && $image->width > 640){
+                        $image->resize(640, null, true);
+                    }
+                    else if(!$wide && $image->height > 1136){
+                        $image->resize(null, 1136, true);
+                    }
+
                     $picture = new Picture();
-                    list($width, $height, $type, $attr) = getimagesize($picFile->getRealPath());
-                    $picture->size_x = $width;
-                    $picture->size_y = $height;
+                    $picture->size_x = $image->width;
+                    $picture->size_y = $image->height;
                     $picture->save();
 
                     $name = $picture->id.'.'.$ext;
-                    $picFile->move('picture', $name);
-                    chmod('picture/'.$name, 0777);
+                    $saveTo = 'picture/'.$name;
+                    $image->save($saveTo);
+                    chmod($saveTo, 0777);
 
                     $picture->picture_link = $name;
                     $picture->save();
@@ -109,6 +118,7 @@ class LessonChapterController extends BaseController {
                     $chapter->picture_id = $picture->id;
                 }
 
+                $chapter->sort_seq = Chapter::where("lesson_id", "=", $lesson_id)->max("sort_seq") + 1;
                 $chapter->save();
 
                 $lesson->chapter_length = Chapter::where("lesson_id", "=", $lesson_id)->count();
@@ -191,6 +201,7 @@ class LessonChapterController extends BaseController {
         try {
             DB::transaction(function() use (&$res, $lesson_id, $id){
                 $chapter = Chapter::findOrFail($id);
+                $oldPicture = Picture::find($chapter->picture_id);
 
                 $picFile = Input::file('picture');
                 $ext = strtolower($picFile->getClientOriginalExtension());
@@ -200,17 +211,24 @@ class LessonChapterController extends BaseController {
                     throw new Exception("Picture upload allow jpg,jpeg,png only");
                 }
 
-                $oldPicture = Picture::find($chapter->picture_id);
+                $image = Image::make($picFile->getRealPath());
+                $wide = $image->height > $image->width? false: true;
+                if($wide && $image->width > 640){
+                    $image->resize(640, null, true);
+                }
+                else if(!$wide && $image->height > 1136){
+                    $image->resize(null, 1136, true);
+                }
 
                 $picture = new Picture();
-                list($width, $height, $type, $attr) = getimagesize($picFile->getRealPath());
-                $picture->size_x = $width;
-                $picture->size_y = $height;
+                $picture->size_x = $image->width;
+                $picture->size_y = $image->height;
                 $picture->save();
 
                 $name = $picture->id.'.'.$ext;
-                $picFile->move('picture', $name);
-                chmod('picture/'.$name, 0777);
+                $saveTo = 'picture/'.$name;
+                $image->save($saveTo);
+                chmod($saveTo, 0777);
 
                 $picture->picture_link = $name;
                 $picture->save();
@@ -250,6 +268,9 @@ class LessonChapterController extends BaseController {
                 $lesson->chapter_length = Chapter::where('lesson_id', '=', $lesson_id)->count();
                 $lesson->save();
 
+                //delete video
+                Video::where("chapter_id", "=", $id)->delete();
+
                 if(!is_null($picture)){
                     $picturePath = "picture/".$picture->picture_link;
                     @$picture->delete();
@@ -261,6 +282,24 @@ class LessonChapterController extends BaseController {
         }
         catch (Exception $e) {
             DB::rollBack();
+            return Response::exception($e);
+        }
+    }
+
+    public function postSort($lesson_id)
+    {
+        try {
+            DB::transaction(function(){
+                $sortData = Input::get("sortData");
+                foreach ($sortData as $key => $value){
+                    $item = Chapter::findOrFail($value);
+                    $item->sort_seq = $key;
+                    $item->save();
+                }
+            });
+            return Response::json(array('sort'=> Input::get('sortData')));
+        }
+        catch (Exception $e) {
             return Response::exception($e);
         }
     }

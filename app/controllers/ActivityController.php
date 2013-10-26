@@ -12,16 +12,42 @@ class ActivityController extends BaseController {
     {
         $user = Auth::getUser();
 
+        if(isset($_GET['start_date'])){
+            $exSD = explode("-", $_GET['start_date']);
+            if($exSD[0] > 2500){
+                $exSD[0] = $exSD[0]-543;
+            }
+            $_GET['start_date'] = implode("-", $exSD);
+        }
+
+        if(isset($_GET['end_date'])){
+            $exSD = explode("-", $_GET['end_date']);
+            if($exSD[0] > 2500){
+                $exSD[0] = $exSD[0]-543;
+            }
+            $_GET['end_date'] = implode("-", $exSD);
+        }
+
+        if(isset($_GET['year'])){
+            if($_GET['year'] > 2500){
+                $_GET['year'] = $_GET['year']-543;
+            }
+        }
+
         if(isset($_GET['start_date']) && isset($_GET['end_date'])){
-            $collection = Activity::where("start_time", ">=", $_GET['start_date'])->where("start_time", "<=", $_GET['end_date'])->orderBy('created_at', 'desc')->get();
+            $collection = Activity::where("start_time", ">=", $_GET['start_date'])->where("start_time", "<=", $_GET['end_date'])->orderBy('start_time', 'asc')->get();
         }
         else if(isset($_GET['month']) && isset($_GET['year'])){
             $collection = Activity::where(DB::raw("MONTH(start_time)"), "=", $_GET['month'])
                 ->where(DB::raw("YEAR(start_time)"), "=", $_GET['year'])
-                ->orderBy('created_at', 'desc')->get();
+                ->orderBy('start_time', 'asc')->get();
+        }
+        else if(isset($_GET['list_mode']) && $_GET['list_mode']=='start_month'){
+            $collection = Activity::where("start_time", ">=", date('Y-m-1'))
+                ->orderBy('start_time', 'asc')->get();
         }
         else {
-            $collection = Activity::orderBy('created_at', 'desc')->get();
+            $collection = Activity::orderBy('start_time', 'asc')->get();
         }
 
         $items = $collection->toArray();
@@ -56,6 +82,9 @@ class ActivityController extends BaseController {
                     $items[$key]['like']['is_liked'] = UserLike::where('user_id', '=', Auth::getUser()->id)->where('object_id', '=', $value['id'])->count() > 0;
                 }
             }
+            if($this->_isset_field('comment')){
+                $items[$key]['comment'] = Comment::find($value['id'])->toArray();
+            }
         }
 
         $fnFilterDay = (function($date) use($items){
@@ -74,10 +103,26 @@ class ActivityController extends BaseController {
             );
         });
 
+        $fnFilterMonth = (function($month, $year) use($items){
+            $data = array();
+            foreach($items as $key => $value){
+                $time = strtotime($value['start_time']);
+                if(date('Y-m', $time)==$year."-".$month){
+                    $data[] = $value;
+                }
+            }
+            return count($data)==0? false: array(
+                'month'=> $month,
+                'year'=> $year,
+                'header'=> date("F - Y", strtotime($year." ".$month)),
+                'length'=> count($data),
+                'data'=> $data
+            );
+        });
+
         $data = array();
         if(isset($_GET['start_date']) && isset($_GET['end_date']) && isset($_GET['list_mode']) && $_GET['list_mode']=='day'){
             $listDay = array();
-            $count = count($items);
             $date = new DateTime($_GET['start_date']);
             $end = new DateTime($_GET['end_date']);
             for($i=0; $date->getTimestamp() <= $end->getTimestamp(); $i++) {
@@ -85,6 +130,21 @@ class ActivityController extends BaseController {
                 $date->add(new DateInterval("P1D"));
             }
             $data = $listDay;
+        }
+        else if(isset($_GET['list_mode']) && $_GET['list_mode']=='start_month') {
+            $start = new DateTime(date('Y-m-1'));
+            $lastDate = $collection->count()>0 ? date('Y-m-d', strtotime($collection->last()->start_time)): date('Y-m-d');
+            $last = new DateTime($lastDate);
+            $listMonth = array();
+            while($start->getTimestamp() <= $last->getTimestamp()){
+                $buffer = $fnFilterMonth($start->format('m'), $start->format('Y'));
+                if($buffer)
+                    $listMonth[] = $buffer;
+
+                $start->add(new DateInterval("P1M"));
+                $start->setDate($start->format('Y'), $start->format('m'), 1);
+            }
+            $data = $listMonth;
         }
         else {
             $data = $items;
@@ -154,15 +214,24 @@ class ActivityController extends BaseController {
                         throw new Exception("Picture upload allow jpg,jpeg,png only");
                     }
 
+                    $image = Image::make($picFile->getRealPath());
+                    $wide = $image->height > $image->width? false: true;
+                    if($wide && $image->width > 640){
+                        $image->resize(640, null, true);
+                    }
+                    else if(!$wide && $image->height > 1136){
+                        $image->resize(null, 1136, true);
+                    }
+
                     $picture = new Picture();
-                    list($width, $height, $type, $attr) = getimagesize($picFile->getRealPath());
-                    $picture->size_x = $width;
-                    $picture->size_y = $height;
+                    $picture->size_x = $image->width;
+                    $picture->size_y = $image->height;
                     $picture->save();
 
                     $name = $picture->id.'.'.$ext;
-                    $picFile->move('picture', $name);
-                    chmod('picture/'.$name, 0777);
+                    $saveTo = 'picture/'.$name;
+                    $image->save($saveTo);
+                    chmod($saveTo, 0777);
 
                     $picture->picture_link = $name;
                     $picture->save();
@@ -267,17 +336,26 @@ class ActivityController extends BaseController {
                     throw new Exception("Picture upload allow jpg,jpeg,png only");
                 }
 
+                $image = Image::make($picFile->getRealPath());
+                $wide = $image->height > $image->width? false: true;
+                if($wide && $image->width > 640){
+                    $image->resize(640, null, true);
+                }
+                else if(!$wide && $image->height > 1136){
+                    $image->resize(null, 1136, true);
+                }
+
                 $oldPicture = Picture::find($item->picture_id);
 
                 $picture = new Picture();
-                list($width, $height, $type, $attr) = getimagesize($picFile->getRealPath());
-                $picture->size_x = $width;
-                $picture->size_y = $height;
+                $picture->size_x = $image->width;
+                $picture->size_y = $image->height;
                 $picture->save();
 
                 $name = $picture->id.'.'.$ext;
-                $picFile->move('picture', $name);
-                chmod('picture/'.$name, 0777);
+                $saveTo = 'picture/'.$name;
+                $image->save($saveTo);
+                chmod($saveTo, 0777);
 
                 $picture->picture_link = $name;
                 $picture->save();

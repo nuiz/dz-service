@@ -28,6 +28,8 @@ class CreateShowcasesTable extends Migration {
             $table->integer('view_count');
             $table->integer('comment_count');
 
+            $table->integer('sort_seq');
+
 			$table->timestamps();
 		});
 	}

@@ -172,15 +172,27 @@ class NewsController extends BaseController {
                     $video_allows = array('mp4');
 
                     if(in_array($ext, $pic_allows)){
+                        $picFile = $media;
+                        $ext = strtolower($picFile->getClientOriginalExtension());
+
+                        $image = Image::make($picFile->getRealPath());
+                        $wide = $image->height > $image->width? false: true;
+                        if($wide && $image->width > 640){
+                            $image->resize(640, null, true);
+                        }
+                        else if(!$wide && $image->height > 1136){
+                            $image->resize(null, 1136, true);
+                        }
+
                         $picture = new Picture();
-                        list($width, $height, $type, $attr) = getimagesize($media->getRealPath());
-                        $picture->size_x = $width;
-                        $picture->size_y = $height;
+                        $picture->size_x = $image->width;
+                        $picture->size_y = $image->height;
                         $picture->save();
 
                         $name = $picture->id.'.'.$ext;
-                        $media->move('picture', $name);
-                        chmod('picture/'.$name, 0777);
+                        $saveTo = 'picture/'.$name;
+                        $image->save($saveTo);
+                        chmod($saveTo, 0777);
 
                         $picture->picture_link = $name;
                         $picture->save();
@@ -326,15 +338,27 @@ class NewsController extends BaseController {
                 $video_allows = array('mp4');
 
                 if(in_array($ext, $pic_allows)){
+                    $picFile = $media;
+                    $ext = strtolower($picFile->getClientOriginalExtension());
+
+                    $image = Image::make($picFile->getRealPath());
+                    $wide = $image->height > $image->width? false: true;
+                    if($wide && $image->width > 640){
+                        $image->resize(640, null, true);
+                    }
+                    else if(!$wide && $image->height > 1136){
+                        $image->resize(null, 1136, true);
+                    }
+
                     $picture = new Picture();
-                    list($width, $height, $type, $attr) = getimagesize($media->getRealPath());
-                    $picture->size_x = $width;
-                    $picture->size_y = $height;
+                    $picture->size_x = $image->width;
+                    $picture->size_y = $image->height;
                     $picture->save();
 
                     $name = $picture->id.'.'.$ext;
-                    $media->move('picture', $name);
-                    chmod('picture/'.$name, 0777);
+                    $saveTo = 'picture/'.$name;
+                    $image->save($saveTo);
+                    chmod($saveTo, 0777);
 
                     $picture->picture_link = $name;
                     $picture->save();

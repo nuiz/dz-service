@@ -48,6 +48,12 @@ class UserPictureController extends BaseController {
             if($validator->fails()){
                 throw new Exception($validator->errors());
             }
+            $ext = strtolower(Input::file('picture')->getClientOriginalExtension());
+            $pic_allows = array('jpg', 'jpeg', 'png');
+
+            if(!in_array($ext, $pic_allows)){
+                throw new Exception("Picture upload allow jpg,jpeg,png only");
+            }
 
             $user = User::findOrFail($user_id);
             $this->_validate_permission('user.picture', 'update', $user);

@@ -8,7 +8,7 @@
  */
 
 abstract class DZEloquent extends Eloquent {
-    #protected $_dz_type, $tables for extends Model
+    #protected $_dz_type, $table for extends Model
 
     public function save(array $options = array())
     {

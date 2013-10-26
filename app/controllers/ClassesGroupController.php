@@ -152,11 +152,11 @@ class ClassesGroupController extends BaseController {
                 $item = Group::findOrFail($id);
 
                 if(Input::has('name')){
-                    $item = Input::get('name');
+                    $item->name = Input::get('name');
                 }
 
                 if(Input::has('description')){
-                    $item->name = Input::get('description');
+                    $item->description = Input::get('description');
                 }
 
                 $item->save();
@@ -170,16 +170,84 @@ class ClassesGroupController extends BaseController {
         }
     }
 
+    public function editVideo($class_id, $id)
+    {
+        $res = array();
+        try {
+            DB::transaction(function() use (&$res, $class_id, $id){
+                $group = Group::findOrFail($id);
+
+                $media = Input::file('video');
+                $ext = strtolower($media->getClientOriginalExtension());
+                $pic_allows = array('mp4');
+
+                if(!in_array($ext, $pic_allows)){
+                    throw new Exception("Video upload allow mp4 only");
+                }
+
+                $oldPicture = NewsVideo::find($group->video_id);
+
+                $news_video = new NewsVideo();
+                $news_video->save();
+
+                $name = $news_video->id.'.'.$ext;
+                $media->move('news_video', $name);
+                chmod('news_video/'.$name, 0777);
+
+                $video_path = 'news_video/'.$name;
+                $thumbnail_path = 'news_video/'.$news_video->id.'.jpeg';
+
+                // shell command [highly simplified, please don't run it plain on your script!]
+                shell_exec("ffmpeg -i {$video_path} -deinterlace -an -ss 1 -t 00:00:01 -r 1 -y -vcodec mjpeg -f mjpeg {$thumbnail_path} 2>&1");
+                chmod($thumbnail_path, 0777);
+
+                $news_video->video_link = $name;
+                $news_video->save();
+
+                $group->video_id = $news_video->id;
+                $group->save();
+
+                $res = $group->toArray();
+                $res['video'] = $news_video->toArray();
+                $res['video']['thumb'] = URL::to("news_video/".$news_video->id.'.jpg');
+                $res['video']['link'] = URL::to("news_video/".$news_video->picture_link);
+
+                if(!is_null($oldPicture)){
+                    $oldPath = "video/".$oldPicture->picture_link;
+                    @$oldPicture->delete();
+                    @unlink($oldPath);
+                }
+            });
+            return Response::json($res);
+        }
+        catch (Exception $e) {
+            DB::rollBack();
+            return Response::exception($e);
+        }
+    }
+
     public function destroy($class_id, $group_id)
     {
         try {
             $response = array();
-            DB::transaction(function() use($group_id, &$response){
+            DB::transaction(function() use($group_id, $class_id, &$response){
+                $class = Classes::findOrFail($class_id);
                 $group = Group::findOrFail($group_id);
                 $video = NewsVideo::find($group->video_id);
                 $response = $group->toArray();
                 $group->delete();
 
+                //update class length
+                UserGroup::where("group_id", "=", $group_id)->delete();
+                $class->group_length = Group::where("group_id", "=", $group_id)->count();
+
+                //delete register group
+                RegisterGroup::where("group_id", "=", $group_id)->delete();
+
+                //delete joined group
+                UserGroup::where("group_id", "=", $group_id)->delete();
+
+                $class->save();
                 if(!is_null($video)){
                     $video_path = "news_video/".$video->video_link;
                     $video->delete();

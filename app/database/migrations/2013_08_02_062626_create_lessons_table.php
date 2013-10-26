@@ -21,6 +21,9 @@ class CreateLessonsTable extends Migration {
             $table->string('logo');
             $table->string('name');
             $table->integer('chapter_length');
+
+            $table->integer('sort_seq');
+
 			$table->timestamps();
 		});
 	}

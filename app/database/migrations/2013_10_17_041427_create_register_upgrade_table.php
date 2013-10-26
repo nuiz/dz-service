@@ -3,7 +3,7 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateRegistersGroupsTable extends Migration {
+class CreateRegisterUpgradeTable extends Migration {
 
 	/**
 	 * Run the migrations.
@@ -12,13 +12,10 @@ class CreateRegistersGroupsTable extends Migration {
 	 */
 	public function up()
 	{
-		Schema::create('registers_groups', function(Blueprint $table)
+		Schema::create('register_upgrade', function(Blueprint $table)
 		{
-            $table->engine ='InnoDB';
-
-			$table->increments('id');
+            $table->increments('id');
             $table->integer('user_id');
-            $table->integer('group_id');
             $table->string('email');
             $table->string('phone_number');
             $table->string('name');
@@ -36,7 +33,7 @@ class CreateRegistersGroupsTable extends Migration {
 	 */
 	public function down()
 	{
-		Schema::drop('registers_groups');
+		Schema::drop('register_upgrade');
 	}
 
 }

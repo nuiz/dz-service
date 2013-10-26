@@ -23,6 +23,8 @@ class CreateVideosTable extends Migration {
             $table->string('description');
             $table->string('video_link');
 
+            $table->integer('sort_seq');
+
             $table->boolean('is_public');
 			$table->timestamps();
 

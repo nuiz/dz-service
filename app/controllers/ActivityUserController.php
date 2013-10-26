@@ -40,7 +40,8 @@ class ActivityUserController extends BaseController {
     {
         try {
             $res = array();
-            DB::transaction(function() use(&$res, $activity_id){
+            $activity = null;
+            DB::transaction(function() use(&$res, $activity_id, &$activity){
                 $user = Auth::getUser();
                 if(!$user){
                     throw new \Tappleby\AuthToken\Exceptions\NotAuthorizedException();
@@ -65,7 +66,8 @@ class ActivityUserController extends BaseController {
                         ->where("activity_id", "=", $activity_id)->count() > 0;
                 }
             });
-            return Response::json($res);
+            $resp = Response::json($res);
+            $resp->send();
         }
         catch (Exception $e) {
             DB::rollBack();

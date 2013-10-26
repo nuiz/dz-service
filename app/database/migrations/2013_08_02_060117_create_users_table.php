@@ -29,6 +29,7 @@ class CreateUsersTable extends Migration {
             $table->string('birth_date');
             $table->string('gender');
             $table->string('type');
+            $table->string('member_timeout');
 
             $table->string('email_show');
             $table->string('phone_show');

@@ -7,6 +7,8 @@
  * To change this template use File | Settings | File Templates.
  */
 
+class SSLException extends Exception {}
+
 class ShowcaseController extends BaseController implements ResourceInterface {
     public function _rules()
     {
@@ -21,7 +23,7 @@ class ShowcaseController extends BaseController implements ResourceInterface {
     public function index()
     {
         try {
-            $showcases = Showcase::orderBy('created_at', 'desc')->get();
+            $showcases = Showcase::orderBy('sort_seq', 'asc')->get();
             $data = $showcases->toArray();
 
             /*
@@ -90,7 +92,14 @@ class ShowcaseController extends BaseController implements ResourceInterface {
         $showcase = array();
         try {
             $validator = Validator::make(Input::all(), array(
-                'youtube_id'=> array('required')
+                'youtube_id'=> array('required'),
+                'name'=> array('required'),
+                'description'=> array('required'),
+                'thumb'=> array('required'),
+                'duration'=> array('required'),
+                'like_count'=> array('required'),
+                'view_count'=> array('required'),
+                'comment_count'=> array('required'),
             ));
             if($validator->fails()){
                 throw new Exception($validator->errors());
@@ -99,22 +108,15 @@ class ShowcaseController extends BaseController implements ResourceInterface {
                 $showcase = new Showcase();
                 $showcase->youtube_id = Input::get('youtube_id');
 
-                $buffer = json_decode(file_get_contents("http://gdata.youtube.com/feeds/api/videos?q=".Input::get('youtube_id')."&v=2&alt=jsonc"));
-                $youtube_data = null;
-                if($buffer->data->totalItems > 0)
-                    $youtube_data = $buffer->data->items[0];
 
-                if(is_null($youtube_data) || empty($youtube_data)){
-                    throw new Exception("youtube api is not found youtube id ".Input::get('youtube_id'));
-                }
-
-                $showcase->name = $youtube_data->title;
-                $showcase->description = $youtube_data->description;
-                $showcase->thumb = $youtube_data->thumbnail->sqDefault;
-                $showcase->duration = $youtube_data->duration;
-                $showcase->like_count = $youtube_data->likeCount;
-                $showcase->view_count = $youtube_data->viewCount;
-                $showcase->comment_count = $youtube_data->commentCount;
+                $showcase->name = Input::get("name");
+                $showcase->description = Input::get("description");
+                $showcase->thumb = Input::get("thumb");
+                $showcase->duration = Input::get("duration");
+                $showcase->like_count = Input::get("like_count");
+                $showcase->view_count = Input::get("view_count");
+                $showcase->comment_count = Input::get("comment_count");
+                $showcase->sort_seq = Showcase::max("sort_seq") + 1;
 
                 $showcase->save();
                 $response = $showcase->getAttributes();
@@ -178,6 +180,24 @@ class ShowcaseController extends BaseController implements ResourceInterface {
             });
         } catch(Exception $e) {
             DB::rollBack();
+            return Response::exception($e);
+        }
+    }
+
+    public function postSort()
+    {
+        try {
+            DB::transaction(function(){
+                $sortData = Input::get("sortData");
+                foreach ($sortData as $key => $value){
+                    $item = Showcase::findOrFail($value);
+                    $item->sort_seq = $key;
+                    $item->save();
+                }
+            });
+            return Response::json(array('sort'=> Input::get('sortData')));
+        }
+        catch (Exception $e) {
             return Response::exception($e);
         }
     }

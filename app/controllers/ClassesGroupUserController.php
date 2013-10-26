@@ -24,6 +24,11 @@ class ClassesGroupUserController extends BaseController {
         else
             if(!$not) $users = User::all()->toArray();
 
+        foreach($users as $key => $value){
+            if($value['type']=="admin"){
+                unset($users[$key]);
+            }
+        }
         return Response::json(array(
             'length'=> count($users),
             'data'=> $users

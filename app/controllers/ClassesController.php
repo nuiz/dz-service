@@ -17,10 +17,25 @@ class ClassesController extends BaseController {
     {
         $classes = Classes::all();
         $data = $classes->toArray();
+        if($this->_isset_field('groups')){
+            $groups = Group::all();
+        }
 
         foreach($data as $key => $value){
             $logo = $value['logo'];
             $data[$key]['logo_link'] = URL::to("lesson_logo/Dancer{$logo}Ip5@2x.png");
+
+
+            if($this->_isset_field('groups')){
+                $buffer = $groups->filter(function($item) use($value){
+                    if($item->class_id == $value['id'])
+                        return true;
+                });
+                $data[$key]['groups'] = array(
+                    'length'=> $buffer->count(),
+                    'data'=> $buffer->toArray()
+                );
+            }
         }
         return Response::json(array(
             'length'=> $classes->count(),
@@ -76,8 +91,12 @@ class ClassesController extends BaseController {
                     $item->name = Input::get('name');
                 }
 
-                if(Input::has('description')){
-                    $item->description = Input::get('description');
+                if(Input::has('logo')){
+                    $item->logo = Input::get('logo');
+                }
+
+                if(Input::has('color')){
+                    $item->color = Input::get('color');
                 }
 
                 $item->save();
@@ -96,8 +115,20 @@ class ClassesController extends BaseController {
             $response = array();
             DB::transaction(function() use(&$response, $id){
                 $classed = Classes::findOrFail($id);
+                $groups = Group::where("class_id", "=", $id)->get();
+                $groups_id = $groups->lists("id");
+
                 $response = $classed->toArray();
                 $classed->delete();
+
+                Group::where("class_id", "=", $id);
+                if(count($groups_id)){
+                    //delete register group
+                    RegisterGroup::whereIn("group_id", $groups_id)->delete();
+
+                    //delete joined group
+                    UserGroup::whereIn("group_id", $groups_id)->delete();
+                }
             });
             return Response::json($response);
         }

@@ -28,10 +28,45 @@ class UserController extends BaseController implements ResourceInterface {
     public function index()
     {
         try {
-            $users = User::all();
+            $users = User::where("type", "!=", "admin")->get();
+            $data = $users->toArray();
+
+            if($this->_isset_field('groups') && $users->count() > 0){
+                $groups = Group::all();
+                $users_groups = UserGroup::all();
+                $classes = Classes::all();
+                $fnG = (function($user_id) use($groups, $users_groups, $classes){
+                    $ugs = $users_groups->filter(function($item) use($user_id){
+                        if($item->user_id == $user_id)
+                            return true;
+                    });
+                    $gs = $groups->filter(function($item) use($ugs){
+                        foreach($ugs as $key => $value){
+                            if($value->group_id == $item->id)
+                                return true;
+                        }
+                    });
+                    $gData = $gs->toArray();
+
+                    foreach($gData as $key => $value){
+                        $buffer = $classes->filter(function($item) use($value){
+                            if($item->id == $value['class_id'])
+                                return true;
+                        });
+                        if($buffer->count() > 0){
+                            $gData[$key]['class'] = $buffer->first()->toArray();
+                        }
+                    }
+                    return $gData;
+                });
+                foreach($data as $key => $value){
+                    $data[$key]['groups'] = array('data'=> $fnG($value['id']));
+                    $data[$key]['groups']['length'] = count($data[$key]['groups']['data']);
+                }
+            }
             return Response::json(array(
-                'data'=> $users->toArray(),
-                'length'=> $users->count()
+                'data'=> $data,
+                'length'=> count($data)
             ));
         }
         catch (Exception $e) {
@@ -60,6 +95,11 @@ class UserController extends BaseController implements ResourceInterface {
                 $response['setting'] = $user_setting->attributesToArray();
             }
 
+            /*
+             * user facebook_id แทนที่ได้ username
+             * เฉพาะกิจ รอ update app แล้วค่อยเปลี่ยนเป็นเหมือนเดิม
+             */
+            $response['facebook_id'] = $response['username'];
             return Response::json($response);
         }
         catch (Exception $e){
@@ -101,7 +141,7 @@ class UserController extends BaseController implements ResourceInterface {
             $response = null;
             DB::transaction(function() use ($id, &$response){
                 $validator = Validator::make(Input::all(), array(
-                    'type'=> 'in:normal,member'
+                    'type'=> 'in:normal,member',
                 ));
 
                 if($validator->fails())
@@ -109,10 +149,14 @@ class UserController extends BaseController implements ResourceInterface {
 
                 $user = User::findOrFail($id);
 
-                $this->_validate_permission('user', 'update', $user);
+                //$this->_validate_permission('user', 'update', $user);
                 if(Input::has('type')){
-                    $this->_validate_permission('user.type', 'update', $user);
+                    //$this->_validate_permission('user.type', 'update', $user);
                     $user->setAttribute('type', Input::get('type'));
+                }
+
+                if(Input::has('member_timeout')){
+                    $user->member_timeout = Input::get("member_timeout");
                 }
 
                 if(Input::has('first_name')){
@@ -182,7 +226,7 @@ class UserController extends BaseController implements ResourceInterface {
                 if(count($comments_id)>0){
                     $comments = Comment::whereIn('id', $comments_id)->get();
                     foreach($comments as $key => $comment) {
-                        $comment->length = UserComment::where('comment_id', '=', $comment->id)->count();
+                        $comment->length = UserComment::where('object_id', '=', $comment->id)->count();
                         $comment->save();
                     }
                 }
@@ -194,10 +238,26 @@ class UserController extends BaseController implements ResourceInterface {
                 if(count($likes_id)>0){
                     $likes = Like::whereIn('id', $likes_id)->get();
                     foreach($likes as $key => $like) {
-                        $likes->length = UserComment::where('comment_id', '=', $like->id)->count();
-                        $likes->save();
+                        $like->length = UserLike::where('object_id', '=', $like->id)->count();
+                        $like->save();
                     }
                 }
+
+                $users_activities = UserActivity::where('user_id', '=', $id)->get();
+                $activities_id = array_unique($users_activities->lists('activity_id'));
+
+                UserActivity::where('user_id', '=', $id)->delete();
+                if(count($likes_id)>0){
+                    $activities = Activity::whereIn('id', $activities_id)->get();
+                    foreach($activities as $key => $activity) {
+                        $activity->user_length = UserActivity::where('activity_id', '=', $activity->id)->count();
+                        $activity->save();
+                    }
+                }
+
+                RegisterUpgrade::where('user_id', '=', $id)->delete();
+                RegisterGroup::where('user_id', '=', $id)->delete();
+                Notification::where('user_id', '=', $id)->delete();
             });
             return Response::json($response);
         }
@@ -239,10 +299,10 @@ class UserController extends BaseController implements ResourceInterface {
                     $user->gender = Input::get('gender');
                 if(Input::has('birth_date'))
                     $user->birth_date = 'normal';
-	if(Input::has('phone_number')){
-		$user->phone_number = Input::get('phone_number');
-		$user->phone_show = Input::get('phone_show');
-	}
+                if(Input::has('phone_number')){
+                    $user->phone_number = Input::get('phone_number');
+                    $user->phone_show = Input::get('phone_show');
+                }
 
                 $user->type = 'normal';
                 $user->save();

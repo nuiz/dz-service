@@ -7,6 +7,7 @@
  * To change this template use File | Settings | File Templates.
  */
 
-class UserActivity extends Eloquent {
+class UserActivity extends DZEloquent {
     protected $table = 'users_activities';
+    protected $_dz_type = "user_activity";
 }

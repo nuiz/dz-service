@@ -9,6 +9,8 @@
 
 namespace Extend\Laravel;
 
+use Illuminate\Support\Facades\Log;
+
 class IOSPush {
     private static $instance = null;
     private $fp = null;
@@ -60,7 +62,7 @@ class IOSPush {
 
     public function __destruct(){
         // Close the connection to the server
-        if(!is_null($this->if))
+        if(!is_null($this->fp))
             fclose($this->fp);
     }
 }

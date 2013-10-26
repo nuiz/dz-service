@@ -19,6 +19,8 @@ class CreateUsersActivitiesTable extends Migration {
 			$table->increments('id');
             $table->integer('user_id');
             $table->integer('activity_id');
+            $table->boolean('admin_read');
+            $table->boolean("called");
 			$table->timestamps();
 		});
 	}

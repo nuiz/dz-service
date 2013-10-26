@@ -7,6 +7,7 @@
  * To change this template use File | Settings | File Templates.
  */
 
-class RegisterGroup extends Eloquent {
+class RegisterGroup extends DZEloquent {
     protected $table = "registers_groups";
+    protected $_dz_type = "register_group";
 }

@@ -10,7 +10,7 @@
 class LessonController extends BaseController {
     public function index()
     {
-        $lessons = Lesson::all();
+        $lessons = Lesson::orderBy('sort_seq', 'asc')->get();
         $data = $lessons->toArray();
         foreach($data as $key => $value){
             $logo = $value['logo'];
@@ -55,6 +55,7 @@ class LessonController extends BaseController {
                 $lesson->name = Input::get('name');
                 $lesson->color = Input::get('color');
                 $lesson->logo = Input::get('logo');
+                $lesson->sort_seq = Lesson::max("sort_seq") + 1;
 
                 $lesson->save();
                 $res = $lesson->toArray();
@@ -131,10 +132,37 @@ class LessonController extends BaseController {
                 $res = $lesson->toArray();
 
                 $lesson->delete();
+
+                //delete chapter and video
+                $chapters = Chapter::where("lesson_id", "=", $id)->get();
+                $chapters_id = $chapters->lists("id");
+                if(count($chapters_id)> 0){
+                    Chapter::where("lesson_id", "=", $id)->delete();
+                    Video::whereIn("chapter_id", "=", $chapters_id)->delete();
+                }
             });
+            return Response::json($res);
         }
         catch (Exception $e) {
             DB::rollBack();
+            return Response::exception($e);
+        }
+    }
+
+    public function postSort()
+    {
+        try {
+            DB::transaction(function(){
+                $sortData = Input::get("sortData");
+                foreach ($sortData as $key => $value){
+                    $item = Lesson::findOrFail($value);
+                    $item->sort_seq = $key;
+                    $item->save();
+                }
+            });
+            return Response::json(array('sort'=> Input::get('sortData')));
+        }
+        catch (Exception $e) {
             return Response::exception($e);
         }
     }

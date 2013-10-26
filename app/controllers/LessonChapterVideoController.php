@@ -11,7 +11,7 @@ class LessonChapterVideoController extends BaseController {
     public function index($lesson_id, $chapter_id)
     {
         try {
-            $videos = Video::where('chapter_id', '=', $chapter_id)->get();
+            $videos = Video::where('chapter_id', '=', $chapter_id)->orderBy('sort_seq', 'asc')->get();
             $data = $videos->toArray();
             $lesson = Lesson::findOrFail($lesson_id);
 
@@ -94,6 +94,7 @@ class LessonChapterVideoController extends BaseController {
                 $video->name = Input::get('name');
                 $video->description = Input::get('description');
                 $video->is_public = Input::get('is_public');
+                $video->sort_seq = Video::where("chapter_id", "=", $chapter_id)->max("sort_seq")+1;
                 $video->save();
 
                 $name = $video->id.'.'.$ext;
@@ -252,6 +253,24 @@ class LessonChapterVideoController extends BaseController {
         }
         catch (Exception $e) {
             DB::rollBack();
+            return Response::exception($e);
+        }
+    }
+
+    public function postSort($lesson_id, $chapter_id)
+    {
+        try {
+            DB::transaction(function(){
+                $sortData = Input::get("sortData");
+                foreach ($sortData as $key => $value){
+                    $item = Video::findOrFail($value);
+                    $item->sort_seq = $key;
+                    $item->save();
+                }
+            });
+            return Response::json(array('sort'=> Input::get('sortData')));
+        }
+        catch (Exception $e) {
             return Response::exception($e);
         }
     }
