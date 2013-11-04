@@ -154,11 +154,11 @@ Route::resource('notification', 'NotificationController');
 Route::resource('sys_notification', 'SysNotificationController');
 Route::resource('admin_notification', 'AdminNotificationController');
 
-Route::get('register_upgrade/read_all', 'RegisterUpgradeController@readAll');
+Route::get('register_upgrade/read_all', 'RegisterUpgradeFixController@readAll');
 Route::get('register_group/read_all', 'RegisterGroupController@readAll');
 Route::get('user_activity/read_all', 'UserActivityController@readAll');
 
-Route::resource('register_upgrade', 'RegisterUpgradeController');
+Route::resource('register_upgrade', 'RegisterUpgradeFixController');
 Route::resource('register_group', 'RegisterGroupController');
 Route::resource('user_activity', 'UserActivityController');
 

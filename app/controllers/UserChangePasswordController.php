@@ -20,10 +20,10 @@ class UserChangePasswordController extends Controller {
                 throw new Exception($validate->messages());
 
             $user = User::findOrFail($user_id);
-            if($user->password!=md5(Input::get('old_password')))
-                throw new Exception('invalid old_password');
+            if(!Hash::check(Input::get('old_password'), $user->password))
+                throw new Exception('invalid old password');
 
-            $user->password = md5(Input::get('new_password'));
+            $user->password = Hash::make(Input::get('new_password'));
             $user->save();
             return Response::json(true);
         }

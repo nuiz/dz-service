@@ -85,6 +85,9 @@ class ActivityController extends BaseController {
             if($this->_isset_field('comment')){
                 $items[$key]['comment'] = Comment::find($value['id'])->toArray();
             }
+
+            $createdTime = new DateTime($items[$key]['start_time']);
+            $items[$key]['start_time_text'] = $createdTime->format("j F Y");
         }
 
         $fnFilterDay = (function($date) use($items){
@@ -179,6 +182,9 @@ class ActivityController extends BaseController {
                 $item['is_joined'] = UserActivity::where("user_id", "=", $user->id)->where("activity_id", "=", $item["id"])->count() > 0;
             }
             $item['start_time_2'] = date("H:i A", strtotime($item['start_time']));
+
+            $createdTime = new DateTime($item['start_time']);
+            $item['start_time_text'] = $createdTime->format("j F Y");
             return Response::json($item);
         }
         catch (Exception $e) {
@@ -238,8 +244,15 @@ class ActivityController extends BaseController {
 
                     $item->picture_id = $picture->id;
                 }
-
                 $item->save();
+
+                if(Input::has("to_feed")){
+                    $update = new Update();
+                    $update->id = $item->id;
+                    $update->type = "activity";
+                    $update->save();
+                }
+
                 $res = $item->toArray();
             });
 
@@ -386,6 +399,10 @@ class ActivityController extends BaseController {
         try {
             $res = array();
             DB::transaction(function() use(&$res, $id){
+                $update = Update::find($id);
+                if(!is_null($update)){
+                    $update->delete();
+                }
                 $item = Activity::findOrFail($id);
                 $res = $item->toArray();
 

@@ -16,7 +16,7 @@ class FeedController extends BaseController {
             if(isset($_GET['limit'])){
                 $limit = $_GET['limit'];
             }
-            $paging = DzObject::whereIn("type", array("news", "showcase", "activity"))->orderBy('id', 'desc')->paginate($limit);
+            $paging = Update::whereIn("type", array("news", "showcase", "activity"))->orderBy('id', 'desc')->paginate($limit);
             $feeds = $paging->getCollection();
             $news_id = $feeds->filter(function($item){
                 if($item->type=="news") return true;
@@ -126,6 +126,8 @@ class FeedController extends BaseController {
                 if($this->_isset_field('comment')){
                     $object[$object['type']]['comment'] = Comment::find($object['id'])->toArray();
                 }
+                $createdTime = new DateTime($object[$object['type']]['created_at']);
+                $object[$object['type']]['created_text'] = $createdTime->format("j F Y");
             });
 
             foreach($data as $key => $value){

@@ -28,7 +28,24 @@ class UserPictureController extends BaseController {
             $picture = file_exists($this->_profile_path.'/'.$user->id.'.'.$this->_profile_extension)?
                 Image::make($this->_profile_path.'/'.$user->id.'.'.$this->_profile_extension):
                 Image::make($this->_profile_path.'/default.jpg');
-            $picture->resize(120, 120);
+            $display = Input::has("display")? Input::get("display"): "thumb";
+            if($display == "full"){
+                if($picture->width >= $picture->height){
+                    $picture->resize(640, null, true);
+                }
+                else {
+                    $picture->resize(null, 960, true);
+                }
+            }
+            else {
+                if($picture->width >= $picture->height){
+                    $picture->resize(null, 120, true);
+                }
+                else {
+                    $picture->resize(120, null, true);
+                }
+                $picture->crop(120, 120);
+            }
             $response = Response::make($picture, 200, array(
                 'Content-Type'=> 'image/jpeg'
             ));
@@ -60,7 +77,7 @@ class UserPictureController extends BaseController {
 
             //Input::file('photo')->move($this->_profile_path.'/'.$user_id.'.'.$this->_profile_extension);
             $picture = Image::make(Input::file('picture')->getRealPath());
-            $picture->resize(120, 120)->save($this->_profile_path.'/'.$user_id.'.'.$this->_profile_extension);
+            $picture->save($this->_profile_path.'/'.$user_id.'.'.$this->_profile_extension);
         }
         catch (Exception $e) {
             return Response::exception($e);

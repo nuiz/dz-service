@@ -7,7 +7,7 @@
  * To change this template use File | Settings | File Templates.
  */
 
-class RegisterUpgradeController extends BaseController {
+class RegisterUpgradeFixController extends BaseController {
     public function index(){
         $nf = RegisterUpgrade::orderBy("created_at", "desc")->get();
         $not_read = $nf->filter(function($item){

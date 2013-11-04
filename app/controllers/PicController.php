@@ -16,9 +16,17 @@ class PicController extends Controller {
             $display = Input::has("display")? Input::get("display"): "default";
             if($display == "update"){
                 $picture->resize(616, null, true);
-                $top = ($picture->height - 396)/2;
-                if($top > 0){
+                //if($picture->height > 396){
                     $picture->crop(616, 396);
+                //}
+            }
+            else if($display == "custom"){
+                $picture->resize(Input::get("size_x"), null, true);
+                if(Input::has("size_y")){
+                    $picture->crop(Input::get("size_x"), Input::get("size_y"));
+                }
+                else{
+                    $picture->crop(Input::get("size_x"), $picture->height);
                 }
             }
             $response = Response::make($picture, 200, array(

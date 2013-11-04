@@ -48,6 +48,8 @@ class CommentController extends BaseController implements ResourceInterface {
                                 }
                             });
                             $data[$key]['from'] = $users_filter->first()->toArray();
+                            $created = new DateTime($value['created_at']);
+                            $data[$key]['created_text'] = $created->format("F d");
                         }
                     }
                 }

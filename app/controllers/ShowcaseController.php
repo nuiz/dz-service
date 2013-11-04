@@ -26,6 +26,10 @@ class ShowcaseController extends BaseController implements ResourceInterface {
             $showcases = Showcase::orderBy('sort_seq', 'asc')->get();
             $data = $showcases->toArray();
 
+            foreach($data as $key => $value){
+                $dateTime = new DateTime($value['created_at']);
+                $data[$key]['created_text'] = $dateTime->format("j F Y");
+            }
             /*
             foreach($data as $key => $value){
                 $buffer = json_decode(file_get_contents("http://gdata.youtube.com/feeds/api/videos?q={$value['youtube_id']}&v=2&alt=jsonc"));
@@ -60,6 +64,8 @@ class ShowcaseController extends BaseController implements ResourceInterface {
         try {
             $showcase = Showcase::findOrFail($id);
             $data = $showcase->toArray();
+            $dateTime = new DateTime($data['created_at']);
+            $data['created_text'] = $dateTime->format("j F Y");
             /*
             $buffer = json_decode(file_get_contents("http://gdata.youtube.com/feeds/api/videos?q={$data['youtube_id']}&v=2&alt=jsonc"));
             $youtube_data = null;
@@ -94,12 +100,11 @@ class ShowcaseController extends BaseController implements ResourceInterface {
             $validator = Validator::make(Input::all(), array(
                 'youtube_id'=> array('required'),
                 'name'=> array('required'),
-                'description'=> array('required'),
                 'thumb'=> array('required'),
                 'duration'=> array('required'),
                 'like_count'=> array('required'),
                 'view_count'=> array('required'),
-                'comment_count'=> array('required'),
+                'comment_count'=> array('required')
             ));
             if($validator->fails()){
                 throw new Exception($validator->errors());
@@ -108,9 +113,10 @@ class ShowcaseController extends BaseController implements ResourceInterface {
                 $showcase = new Showcase();
                 $showcase->youtube_id = Input::get('youtube_id');
 
-
                 $showcase->name = Input::get("name");
-                $showcase->description = Input::get("description");
+                if(Input::has('description')){
+                    $showcase->description = Input::get("description");
+                }
                 $showcase->thumb = Input::get("thumb");
                 $showcase->duration = Input::get("duration");
                 $showcase->like_count = Input::get("like_count");
@@ -119,6 +125,13 @@ class ShowcaseController extends BaseController implements ResourceInterface {
                 $showcase->sort_seq = Showcase::max("sort_seq") + 1;
 
                 $showcase->save();
+
+                if(Input::has("to_feed") && Input::get("to_feed")=="true"){
+                    $update = new Update();
+                    $update->id = $showcase->id;
+                    $update->type = "showcase";
+                    $update->save();
+                }
                 $response = $showcase->getAttributes();
             });
             $res = Response::json($response);
@@ -175,6 +188,10 @@ class ShowcaseController extends BaseController implements ResourceInterface {
     {
         try {
             DB::transaction(function() use($id){
+                $update = Update::find($id);
+                if(!is_null($update)){
+                    $update->delete();
+                }
                 $showcase = Showcase::find($id);
                 $showcase->delete();
             });

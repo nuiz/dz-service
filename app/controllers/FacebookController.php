@@ -76,7 +76,13 @@ class FacebookController extends BaseController {
                     $user->save();
                 }
 
-                $authToken = AuthToken::create($user);
+                //$authToken = AuthToken::create($user);
+                //$publicToken = AuthToken::publicToken($authToken);
+
+                //$buffer = DB::table("ta_auth_tokens")->where("auth_identifier", "=", $user->id)->get();
+                //$authToken = new AuthToken($user->id, $buffer->public_key, $buffer->private_key);
+
+                $authToken = AuthToken::find($user->id);
                 $publicToken = AuthToken::publicToken($authToken);
 
                 $data['user'] = $user->toArray();

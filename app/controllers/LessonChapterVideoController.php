@@ -89,12 +89,20 @@ class LessonChapterVideoController extends BaseController {
                     throw new Exception('file upload not allowed');
                 }
 
+                $items = Video::where('chapter_id', '=', $chapter_id)->orderBy('sort_seq', 'asc')->get();
+                $i = 0;
+                $items->each(function($item) use(&$i){
+                    $i++;
+                    $item->sort_seq = $i;
+                    $item->save();
+                });
+
                 $video = new Video();
                 $video->chapter_id = $chapter_id;
                 $video->name = Input::get('name');
                 $video->description = Input::get('description');
                 $video->is_public = Input::get('is_public');
-                $video->sort_seq = Video::where("chapter_id", "=", $chapter_id)->max("sort_seq")+1;
+                $video->sort_seq = 0;
                 $video->save();
 
                 $name = $video->id.'.'.$ext;

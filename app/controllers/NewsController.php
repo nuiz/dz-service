@@ -75,6 +75,9 @@ class NewsController extends BaseController {
                 if($this->_isset_field('comment')){
                     $data[$key]['comment'] = Comment::find($value['id'])->toArray();
                 }
+
+                $createdTime = new DateTime($data[$key]['created_at']);
+                $data[$key]['created_text'] = $createdTime->format("j F Y");
             }
 
             $res = array(
@@ -139,6 +142,8 @@ class NewsController extends BaseController {
                 $item['comment'] = Comment::find($id)->toArray();
             }
 
+            $createdTime = new DateTime($item['created_at']);
+            $item['created_text'] = $createdTime->format("j F Y");
             return Response::json($item);
         }
         catch (Exception $e) {
@@ -226,6 +231,10 @@ class NewsController extends BaseController {
                     }
                 }
                 $news->save();
+                $update = new Update();
+                $update->id = $news->id;
+                $update->type = "news";
+                $update->save();
                 $res = $news->toArray();
             });
             $response = Response::json($res);
@@ -425,6 +434,10 @@ class NewsController extends BaseController {
             $res = array();
             DB::transaction(function() use($id, &$res) {
                 $news = News::findOrFail($id);
+                $update = Update::find($id);
+                if(!is_null($update)){
+                    $update->delete();
+                }
                 $res = $news->toArray();
                 $picture = Picture::find($news->picture_id);
                 if(!is_null($picture)){
