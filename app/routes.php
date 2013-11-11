@@ -117,7 +117,7 @@ Route::resource('user.picture', 'UserPictureController');
 
 Route::post('showcase/sort', 'ShowcaseController@postSort');
 Route::resource('showcase', 'ShowcaseController');
-Route::resource('showcase.comments', 'CommentController');
+//Route::resource('showcase.comments', 'DZObjectCommentController');
 
 Route::resource('class', 'ClassesController');
 Route::resource('class.group', 'ClassesGroupController');
@@ -144,7 +144,8 @@ Route::post('activity/{activity_id}/editPicture', 'ActivityController@editPictur
 Route::resource('activity.user', 'ActivityUserController');
 Route::delete('activity/{id}/user', 'ActivityUserController@delete');
 
-Route::resource('dz_object.comment', 'CommentController');
+Route::resource('dz_object', 'DZObjectController');
+Route::resource('dz_object.comment', 'DZObjectCommentController');
 Route::resource('dz_object.like', 'LikeController');
 Route::delete('dz_object/{dz_object}/like', 'LikeController@delete');
 
@@ -169,3 +170,12 @@ Route::resource('pic', 'PicController');
 Route::resource('setting', 'SettingController');
 
 Route::resource('feed', "FeedController");
+
+Route::resource('calendar', "CalendarController");
+
+Route::resource('admin_calendar', "AdminCalendarController");
+
+Route::resource('study', "StudyController");
+Route::resource('group.study', "GroupStudyController");
+
+Route::resource("comment", "CommentController");

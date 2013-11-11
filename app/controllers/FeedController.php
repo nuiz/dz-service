@@ -79,7 +79,7 @@ class FeedController extends BaseController {
                     });
                     $object['news'] = $buffer->first()->toArray();
                     if($object['news']['media_type']=="picture"){
-                        $object['news']['picutre'] = $fnGetPicture($object['news']['picture_id']);
+                        $object['news']['picture'] = $fnGetPicture($object['news']['picture_id']);
                     }
                     else if($object['news']['media_type']=="video") {
                         $buffer_video = $videos->filter(function($item) use ($object){
@@ -109,7 +109,7 @@ class FeedController extends BaseController {
                     });
                     $object['activity'] = $buffer->first()->toArray();
                     if($object['activity']['picture_id']!=0){
-                        $object['activity']['picutre'] = $fnGetPicture($object['activity']['picture_id']);
+                        $object['activity']['picture'] = $fnGetPicture($object['activity']['picture_id']);
                     }
                 }
 

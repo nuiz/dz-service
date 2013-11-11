@@ -88,6 +88,10 @@ class ActivityController extends BaseController {
 
             $createdTime = new DateTime($items[$key]['start_time']);
             $items[$key]['start_time_text'] = $createdTime->format("j F Y");
+
+            $createdTime = new DateTime($items[$key]['created_at']);
+            $items[$key]['created_text'] = $createdTime->format("j F Y");
+
         }
 
         $fnFilterDay = (function($date) use($items){
@@ -183,8 +187,25 @@ class ActivityController extends BaseController {
             }
             $item['start_time_2'] = date("H:i A", strtotime($item['start_time']));
 
+            $user = Auth::getUser();
+            if(!is_null($user)){
+                $item['is_joined'] = UserActivity::where("user_id", "=", $user->id)->where("activity_id", "=", $item["id"])->count() > 0;
+            }
+            if($this->_isset_field('like')){
+                $item['like'] = Like::find($item['id'])->toArray();
+                if(!is_null(Auth::getUser())){
+                    $item['like']['is_liked'] = UserLike::where('user_id', '=', Auth::getUser()->id)->where('object_id', '=', $item['id'])->count() > 0;
+                }
+            }
+            if($this->_isset_field('comment')){
+                $item['comment'] = Comment::find($item['id'])->toArray();
+            }
+
             $createdTime = new DateTime($item['start_time']);
             $item['start_time_text'] = $createdTime->format("j F Y");
+
+            $createdTime = new DateTime($item['created_at']);
+            $item['created_text'] = $createdTime->format("j F Y");
             return Response::json($item);
         }
         catch (Exception $e) {

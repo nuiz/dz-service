@@ -55,6 +55,7 @@ class ClassesGroupController extends BaseController {
         try {
             $group = Group::findOrFail($group_id);
             $response = $group->toArray();
+            $week = GroupWeek::findOrFail($group_id);
 
             /*
             if($this->_isset_field('users')){
@@ -65,6 +66,7 @@ class ClassesGroupController extends BaseController {
             */
 
             $data = $group->toArray();
+            $data['group_week'] = $week->toArray();
             $video = NewsVideo::find($data['video_id']);
             if(!is_null($video)){
                 $data['video'] = $video->toArray();
@@ -87,10 +89,18 @@ class ClassesGroupController extends BaseController {
                 $validator = Validator::make(Input::all(), array(
                     'name'=> array('required'),
                     'description'=> array('required'),
-                    'video'=> array('required')
+                    'study_count'=> array('required'),
+                    'date_start'=> array('required'),
+                    'date_end'=> array('required'),
+                    'group_week'=> array('required'),
+                    'group_study'=> array('required')
                 ));
                 if($validator->fails())
                     throw new Exception($validator->messages()->first());
+
+                if(!Input::hasFile("video")){
+                    throw new Exception("video is required");
+                }
 
                 $classed = Classes::findOrFail($class_id);
 
@@ -99,6 +109,7 @@ class ClassesGroupController extends BaseController {
                 $group->description = Input::get('description');
                 $group->class_id = $class_id;
 
+                Log::info("0");
                 // video
                 if(!Input::hasFile('video')){
                     throw new Exception("this action is required upload video");
@@ -132,7 +143,59 @@ class ClassesGroupController extends BaseController {
                 $group->save();
                 $classed->group_length = Group::where("class_id", "=", $class_id)->count();
                 $classed->save();
+                $group_week = new GroupWeek();
+                $group_week->id = $group->id;
+                $group_week->study_count = Input::get("study_count");
 
+                $input_week = Input::get("group_week");
+                $group_week->sun_active = isset($input_week['sun_active']);
+                if(isset($input_week['sun_active'])){
+                    $group_week->sun_start = $input_week["sun_start"];
+                    $group_week->sun_end = $input_week["sun_end"];
+                }
+                $group_week->mon_active = isset($input_week['mon_active']);
+                if(isset($input_week['mon_active'])){
+                    $group_week->mon_start = $input_week["mon_start"];
+                    $group_week->mon_end = $input_week["mon_end"];
+                }
+                $group_week->tue_active = isset($input_week['tue_active']);
+                if(isset($input_week['tue_active'])){
+                    $group_week->tue_start = $input_week["tue_start"];
+                    $group_week->tue_end = $input_week["tue_end"];
+                }
+                $group_week->wed_active = isset($input_week['wed_active']);
+                if(isset($input_week['wed_active'])){
+                    $group_week->wed_start = $input_week["wed_start"];
+                    $group_week->wed_end = $input_week["wed_end"];
+                }
+                $group_week->thu_active = isset($input_week['thu_active']);
+                if(isset($input_week['thu_active'])){
+                    $group_week->thu_start = $input_week["thu_start"];
+                    $group_week->thu_end = $input_week["thu_end"];
+                }
+                $group_week->fri_active = isset($input_week['fri_active']);
+                if(isset($input_week['fri_active'])){
+                    $group_week->fri_start = $input_week["fri_start"];
+                    $group_week->fri_end = $input_week["fri_end"];
+                }
+                $group_week->sat_active = isset($input_week['sat_active']);
+                if(isset($input_week['sat_active'])){
+                    $group_week->sat_start = $input_week["sat_start"];
+                    $group_week->sat_end = $input_week["sat_end"];
+                }
+                $group_week->save();
+
+                $input_study = Input::get("group_study");
+                foreach($input_study as $key => $value){
+                    $group_study = new GroupStudy();
+                    $group_study->group_id = $group->id;
+                    $group_study->status = "active";
+                    $group_study->start = $value['start'];
+                    $group_study->end = $value['end'];
+                    $group_study->ori_start = $value['start'];
+                    $group_study->ori_end = $value['end'];
+                    $group_study->save();
+                }
                 $res = $group->toArray();
                 $res['video'] = $news_video->toArray();
             });
@@ -239,13 +302,19 @@ class ClassesGroupController extends BaseController {
 
                 //update class length
                 UserGroup::where("group_id", "=", $group_id)->delete();
-                $class->group_length = Group::where("group_id", "=", $group_id)->count();
+                $class->group_length = Group::where("class_id", "=", $class->id)->count();
 
                 //delete register group
                 RegisterGroup::where("group_id", "=", $group_id)->delete();
 
                 //delete joined group
-                UserGroup::where("group_id", "=", $group_id)->delete();
+                @UserGroup::where("group_id", "=", $group_id)->delete();
+
+                //delete in calendar
+                @GroupStudy::where("group_id", "=", $group_id)->delete();
+
+                //delete in groups_week
+                @GroupWeek::where("id", "=", $group_id)->delete();
 
                 $class->save();
                 if(!is_null($video)){

@@ -30,14 +30,7 @@ class ShowcaseController extends BaseController implements ResourceInterface {
                 $dateTime = new DateTime($value['created_at']);
                 $data[$key]['created_text'] = $dateTime->format("j F Y");
             }
-            /*
             foreach($data as $key => $value){
-                $buffer = json_decode(file_get_contents("http://gdata.youtube.com/feeds/api/videos?q={$value['youtube_id']}&v=2&alt=jsonc"));
-                $youtube_data = null;
-                if($buffer->data->totalItems > 0)
-                    $youtube_data = $buffer->data->items[0];
-
-                $data[$key]['youtube_data'] = $youtube_data;
                 if($this->_isset_field('like')){
                     $data[$key]['like'] = Like::find($value['id'])->toArray();
                     if(!is_null(Auth::getUser())){
@@ -48,7 +41,6 @@ class ShowcaseController extends BaseController implements ResourceInterface {
                     $data[$key]['comment'] = Comment::find($value['id'])->toArray();
                 }
             }
-            */
 
             return Response::json(array(
                 'length'=> count($data),
@@ -66,14 +58,6 @@ class ShowcaseController extends BaseController implements ResourceInterface {
             $data = $showcase->toArray();
             $dateTime = new DateTime($data['created_at']);
             $data['created_text'] = $dateTime->format("j F Y");
-            /*
-            $buffer = json_decode(file_get_contents("http://gdata.youtube.com/feeds/api/videos?q={$data['youtube_id']}&v=2&alt=jsonc"));
-            $youtube_data = null;
-            if($buffer->data->totalItems > 0)
-                $youtube_data = $buffer->data->items[0];
-
-            $data['youtube_data'] = $youtube_data;
-
             if($this->_isset_field('like')){
                 $data['like'] = Like::find($id)->toArray();
                 if(!is_null(Auth::getUser())){
@@ -83,7 +67,6 @@ class ShowcaseController extends BaseController implements ResourceInterface {
             if($this->_isset_field('comment')){
                 $data['comment'] = Comment::find($id)->toArray();
             }
-            */
 
             return Response::json($data);
         }
@@ -107,7 +90,7 @@ class ShowcaseController extends BaseController implements ResourceInterface {
                 'comment_count'=> array('required')
             ));
             if($validator->fails()){
-                throw new Exception($validator->errors());
+                throw new Exception($validator->errors()->first());
             }
             DB::transaction(function() use (&$response, &$showcase){
                 $showcase = new Showcase();
