@@ -36,13 +36,12 @@ class CalendarController extends BaseController {
             $listDay = array();
             $fnFilterDay = function($date) use($activities, $studies, $user){
                 $day = array(
+	   'date'=> $date,
                     'activities' => array(),
                     'studies'=> array()
                 );
 
-                /*
-                 * Activity section
-                 */
+                /* activity section */
                 $buffer = $activities->filter(function($item) use($date){
                     $dateTime_activity = new DateTime($item->start_time);
                     if($dateTime_activity->format("Y-m-d")==$date)
@@ -59,9 +58,7 @@ class CalendarController extends BaseController {
                 }
                 $day['activities'] = $activities;
 
-                /*
-                 * Study section
-                 */
+                /* study section */
                 $buffer = $studies->filter(function($item) use($date){
                     $dateTime_activity = new DateTime($item->start);
                     if($dateTime_activity->format("Y-m-d")==$date)

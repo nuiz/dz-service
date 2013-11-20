@@ -105,7 +105,15 @@ class ShowcaseController extends BaseController implements ResourceInterface {
                 $showcase->like_count = Input::get("like_count");
                 $showcase->view_count = Input::get("view_count");
                 $showcase->comment_count = Input::get("comment_count");
-                $showcase->sort_seq = Showcase::max("sort_seq") + 1;
+                $showcase->sort_seq = 0;
+
+                $items = Showcase::orderBy('sort_seq', 'asc')->get();
+                $i = 0;
+                $items->each(function($item) use(&$i){
+                    $i++;
+                    $item->sort_seq = $i;
+                    $item->save();
+                });
 
                 $showcase->save();
 

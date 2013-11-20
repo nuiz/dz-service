@@ -28,6 +28,22 @@ class ClassesGroupController extends BaseController {
         if(count($videos_id) > 0){
             $videos = NewsVideo::whereIn('id', $videos_id)->get();
         }
+
+        $groups_week = false;
+        $fnGetWeek = function($id) use($groups_week, $groups){
+            if(!$groups_week){
+                $groups_id = $groups->lists("id");
+                $groups_week = GroupWeek::whereIn("id", $groups_id)->get();
+            }
+
+            $buffer = $groups_week->filter(function($item) use($id){
+                if($item->id==$id){
+                    return true;
+                }
+            });
+
+            return $buffer->first()->toArray();
+        };
         foreach($data as $key => $value){
             if($videos_id>0){
                 $buffer = $videos->filter(function($item) use ($value){
@@ -41,6 +57,9 @@ class ClassesGroupController extends BaseController {
                     $buffer2['thumb'] = URL::to('news_video/'.$buffer2['id'].'.jpeg');
                     $data[$key]['video'] = $buffer2;
                 }
+            }
+            if($this->_isset_field("group_week")){
+                $data[$key]['group_week'] = $fnGetWeek($data[$key]['id']);
             }
         }
 
@@ -74,6 +93,10 @@ class ClassesGroupController extends BaseController {
                 $data['video']['link'] = URL::to('news_video/'.$video->video_link);
             }
 
+            if($this->_isset_field("group_week")){
+                $data['group_week'] = GroupWeek::find($group_id)->toArray();
+            }
+
             return Response::json($data);
         }
         catch (Exception $e) {
@@ -89,11 +112,11 @@ class ClassesGroupController extends BaseController {
                 $validator = Validator::make(Input::all(), array(
                     'name'=> array('required'),
                     'description'=> array('required'),
-                    'study_count'=> array('required'),
-                    'date_start'=> array('required'),
-                    'date_end'=> array('required'),
                     'group_week'=> array('required'),
-                    'group_study'=> array('required')
+                    'group_study'=> array('required'),
+                    'group_week.study_count'=> array('required'),
+                    'group_week.date_start'=> array('required'),
+                    'group_week.date_end'=> array('required')
                 ));
                 if($validator->fails())
                     throw new Exception($validator->messages()->first());
@@ -101,6 +124,8 @@ class ClassesGroupController extends BaseController {
                 if(!Input::hasFile("video")){
                     throw new Exception("video is required");
                 }
+
+                $input_week = Input::get("group_week");
 
                 $classed = Classes::findOrFail($class_id);
 
@@ -145,9 +170,10 @@ class ClassesGroupController extends BaseController {
                 $classed->save();
                 $group_week = new GroupWeek();
                 $group_week->id = $group->id;
-                $group_week->study_count = Input::get("study_count");
+                $group_week->study_count = $input_week["study_count"];
+                $group_week->date_start = $input_week["date_start"];
+                $group_week->date_end = $input_week["date_end"];
 
-                $input_week = Input::get("group_week");
                 $group_week->sun_active = isset($input_week['sun_active']);
                 if(isset($input_week['sun_active'])){
                     $group_week->sun_start = $input_week["sun_start"];

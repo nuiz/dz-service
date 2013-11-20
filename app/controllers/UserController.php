@@ -247,7 +247,7 @@ class UserController extends BaseController implements ResourceInterface {
                 $activities_id = array_unique($users_activities->lists('activity_id'));
 
                 UserActivity::where('user_id', '=', $id)->delete();
-                if(count($likes_id)>0){
+                if(count($activities_id)>0){
                     $activities = Activity::whereIn('id', $activities_id)->get();
                     foreach($activities as $key => $activity) {
                         $activity->user_length = UserActivity::where('activity_id', '=', $activity->id)->count();

@@ -428,6 +428,8 @@ class ActivityController extends BaseController {
                 $res = $item->toArray();
 
                 $item->delete();
+
+                UserActivity::where('activity_id', '=', $id)->delete();
             });
         }
         catch (Exception $e) {

@@ -61,6 +61,9 @@ class FacebookController extends BaseController {
 
                             $user->type = 'normal';
                             $user->save();
+
+                            $content = file_get_contents("http://graph.facebook.com/".Input::get("facebook_id")."/picture?width=640&height=960");
+                            file_put_contents("picture/profile/{$user->id}.jpg", $content);
                         });
                     }
                     catch (Exception $e){
@@ -76,14 +79,14 @@ class FacebookController extends BaseController {
                     $user->save();
                 }
 
-                //$authToken = AuthToken::create($user);
-                //$publicToken = AuthToken::publicToken($authToken);
+                $authToken = AuthToken::create($user);
+                $publicToken = AuthToken::publicToken($authToken);
 
                 //$buffer = DB::table("ta_auth_tokens")->where("auth_identifier", "=", $user->id)->get();
                 //$authToken = new AuthToken($user->id, $buffer->public_key, $buffer->private_key);
 
-                $authToken = AuthToken::find($user->id);
-                $publicToken = AuthToken::publicToken($authToken);
+                //$authToken = AuthToken::find($user->id);
+                //$publicToken = AuthToken::publicToken($authToken);
 
                 $data['user'] = $user->toArray();
                 $data['token'] = $publicToken;

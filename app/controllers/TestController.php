@@ -11,7 +11,12 @@ class TestController extends Controller {
 
     public function index()
     {
-        return Response::json(Input::all());
+        /*
+        $content = file_get_contents("http://graph.facebook.com/papangping/picture?width=640&height=960");
+        file_put_contents("a.jpg", $content);
+        */
+        $content = '';
+        return Image::raw($content);
     }
 
     public function store()

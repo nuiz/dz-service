@@ -16,7 +16,6 @@ class LessonChapterVideoController extends BaseController {
             $lesson = Lesson::findOrFail($lesson_id);
 
             foreach($data as $key => $value){
-                $data[$key]['link'] = URL::to('video/'.$value['video_link']);
                 $data[$key]['thumb'] = URL::to('video/'.$value['id'].'.jpeg');
 
                 if($this->_isset_field('like')){
@@ -27,6 +26,13 @@ class LessonChapterVideoController extends BaseController {
                 }
                 if($this->_isset_field('comment')){
                     $data[$key]['comment'] = Comment::find($value['id'])->toArray();
+                }
+                $user = Auth::user();
+                if((!is_null($user) && $user->type != "normal") || $value['is_public']==1){
+                    $data[$key]['link'] = URL::to('video/'.$value['video_link']);
+                }
+                else {
+                    unset($data[$key]['video_link']);
                 }
                 $data[$key]['color'] = $lesson->color;
             }
@@ -46,7 +52,14 @@ class LessonChapterVideoController extends BaseController {
             $lesson = Lesson::findOrFail($lesson_id);
             $item = Video::findOrFail($id);
             $data = $item->toArray();
-            $data['link'] = URL::to('video/'.$data['video_link']);
+
+            $user = Auth::user();
+            if((!is_null($user) && $user->type != "normal") || $data['is_public']==1){
+                $data['link'] = URL::to('video/'.$data['video_link']);
+            }
+            else {
+                unset($data['video_link']);
+            }
             $data['thumb'] = URL::to('video/'.$data['id'].'.jpeg');
 
             if($this->_isset_field('like')){
