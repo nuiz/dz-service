@@ -30,9 +30,11 @@ class LessonChapterVideoController extends BaseController {
                 $user = Auth::user();
                 if((!is_null($user) && $user->type != "normal") || $value['is_public']==1){
                     $data[$key]['link'] = URL::to('video/'.$value['video_link']);
+                    $data[$key]['can_see'] = 1;
                 }
                 else {
                     unset($data[$key]['video_link']);
+                    $data[$key]['can_see'] = 0;
                 }
                 $data[$key]['color'] = $lesson->color;
             }
@@ -56,9 +58,11 @@ class LessonChapterVideoController extends BaseController {
             $user = Auth::user();
             if((!is_null($user) && $user->type != "normal") || $data['is_public']==1){
                 $data['link'] = URL::to('video/'.$data['video_link']);
+                $data['can_see'] = 1;
             }
             else {
                 unset($data['video_link']);
+                $data['can_see'] = 0;
             }
             $data['thumb'] = URL::to('video/'.$data['id'].'.jpeg');
 
